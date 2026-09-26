@@ -1,0 +1,29 @@
+{
+  "name": "myscoutee",
+  "version": "1.3.0",
+  "description": "MyScoutee live help and profile-authorized API tools.",
+  "author": {
+    "name": "MyScoutee"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "MyScoutee",
+    "shortDescription": "Current help and authorized MyScoutee actions.",
+    "longDescription": "Read the active English or Hungarian help and use the existing API permissions for events, assets and invitations.",
+    "developerName": "MyScoutee",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Explain how MyScoutee groups work.",
+      "Hogyan kérhetek közvetlen chatengedélyt?",
+      "Help me plan an event in MyScoutee."
+    ],
+    "logo": "./assets/logo.png",
+    "composerIcon": "./assets/logo.png"
+  },
+  "mcpServers": "./.mcp.json",
+  "repository": "https://github.com/fssrepository/myscoutee-mcp"
+}
