@@ -1,0 +1,16 @@
+services:
+  mcp:
+    build: .
+    image: myscoutee-mcp:1.3.0
+    environment:
+      MYSCOUTEE_API_BASE_URL: ${MYSCOUTEE_API_BASE_URL:?Set the existing MyScoutee API base URL ending in /api}
+      MYSCOUTEE_MCP_TRANSPORT: http
+      MYSCOUTEE_MCP_LISTEN: 0.0.0.0:8080
+    ports:
+      - "127.0.0.1:8091:8080"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.5
+    restart: unless-stopped
