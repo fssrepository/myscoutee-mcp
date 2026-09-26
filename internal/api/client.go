@@ -48,6 +48,12 @@ type Client struct {
 	HTTP       *http.Client
 }
 
+type HTTPError struct{ Status int }
+
+func (e *HTTPError) Error() string {
+	return fmt.Sprintf("MyScoutee API returned HTTP %d; check access and retry only when appropriate", e.Status)
+}
+
 type GroupScope struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -186,7 +192,7 @@ func (c *Client) request(ctx context.Context, method, path string, body any, pri
 	defer res.Body.Close()
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		// Do not expose raw backend errors, tokens, or personal data in exception text.
-		return fmt.Errorf("MyScoutee API returned HTTP %d; check access and retry only when appropriate", res.StatusCode)
+		return &HTTPError{Status: res.StatusCode}
 	}
 	data, err := io.ReadAll(io.LimitReader(res.Body, 2*1024*1024+1))
 	if err != nil || len(data) > 2*1024*1024 {

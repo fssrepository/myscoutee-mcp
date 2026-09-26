@@ -88,11 +88,42 @@ Run `build/myscoutee-mcp` or the plugin's Docker command. With no key, only help
 advertised. Supplying only part of the identity fails startup. Public HTTP refuses
 a process-wide private key: it cannot expose one user's operations to everybody.
 
-**Remote personal ChatGPT/Claude operations are not implemented yet.** They need
-per-user OAuth, grant/revocation management and the app's MCP-connections table.
-An ordinary integration key is not an OAuth access token and is not passed through
-as one. The HTTP package currently connects for anonymous help only. No remote
-private-operation or live ChatGPT/Claude QA pass is claimed.
+## Remote personal connections
+
+Use the deployed HTTPS `/mcp/private` endpoint. The anonymous `/mcp` endpoint
+continues to provide help without credentials.
+
+1. In the app, select the profile/group whose API permissions should apply.
+   Open Profile editor → Affiliate → Client keys → **AI / MCP connections**.
+2. Create one connection per AI client using that client's **exact callback URL**.
+   Copy the MCP URL, client ID and one-time secret into the AI client's advanced
+   connector settings. ChatGPT/Claude support predefined OAuth clients; no public
+   dynamic registration endpoint is provided. Never paste secrets into chat.
+3. Connect, sign in through the normal MyScoutee login, verify the displayed
+   profile/group and approve access. Selecting another group in the application
+   does not retarget this connection.
+4. Revoke the row to invalidate access and refresh tokens. Connections expire
+   after 90 days. In local/demo mode only the settings persist; they cannot
+   establish a remote personal connection.
+
+The same integration-key owner manages MCP client secrets (separate `mcp`
+scope). Authorization codes are one-use, five-minute, S256 PKCE-bound records.
+The token endpoint supports `client_secret_basic` and `client_secret_post`,
+resource-bound one-hour bearer tokens and rotating refresh tokens; replay revokes
+the refresh family. Only hashes persist. Both discovery and execution traverse
+the normal API authentication, membership and operation checks. Ordinary API keys
+are not accepted as remote OAuth bearer tokens. Tokens never reach help requests.
+
+Nginx routes the protected-resource and authorization-server metadata,
+`/api/mcp/oauth/token`, `/mcp/private`, and the SPA consent route `/mcp/authorize`.
+The configured integration public origin and `MYSCOUTEE_PUBLIC_API_BASE_URL`
+must describe the same installation. No caller-supplied Host chooses the issuer.
+User revocation is available in the app; automatic DCR, CIMD and token revocation
+protocol endpoints are not advertised. Live client acceptance remains a QA gate.
+
+Protocol references: [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization),
+[OpenAI authentication](https://developers.openai.com/plugins/build/auth),
+[Claude custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
 
 ## Unpublished plugin
 
@@ -106,7 +137,8 @@ make plugin PLUGIN_TARGET=claude        # Claude package only
 make plugin MCP_URL=https://your-deployment.example/mcp  # remote help package
 ```
 
-ZIPs are written to `build/`. The remote variant advertises Read capability only.
+ZIPs are written to `build/`. `/mcp` builds a Read-only remote-help variant;
+`/mcp/private` builds a remote-private variant requiring OAuth configuration.
 The shared source builds separate OpenAI and Claude manifests with the existing
 MyScoutee logo. See [plugin build and distribution](plugins/README.md).
 Use the real deployed HTTPS URL when preparing that variant. Building neither
@@ -119,5 +151,5 @@ Automated tests cover actual MCP HTTP initialization/discovery/tools/resources,
 active-revision changes, language/search, failed help reads, private-tool exclusion,
 API identity/path handling, input-schema rejection, redirects and credential-safe
 errors. Docker initialization/discovery is also smoke-tested during development.
-Full MyScoutee backend integration, OAuth, and user-operated mobile/ChatGPT/Claude
+Full deployed MyScoutee backend integration and user-operated mobile/ChatGPT/Claude
 checks are separate NOT RUN cases; see `docs/QA.md`.

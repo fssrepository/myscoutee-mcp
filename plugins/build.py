@@ -27,7 +27,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     source = root / "plugins/myscoutee"
     manifest = json.loads((source / "plugin.json").read_text())
-    variant = "remote-help" if args.url else "local"
+    variant = ("remote-private" if url.path.rstrip("/").endswith("/mcp/private") else "remote-help") if args.url else "local"
     targets = ("openai", "claude") if args.target == "all" else (args.target,)
     for target in targets:
         output = root / "build/plugins" / target / variant / "myscoutee"
@@ -43,7 +43,7 @@ def main():
         else:
             claude = {key: manifest[key] for key in
                       ("name", "version", "description", "author", "repository")}
-            if args.url:
+            if variant == "remote-help":
                 claude["description"] = "Current MyScoutee help in English and Hungarian."
             write_json(output / ".claude-plugin/plugin.json", claude)
             shutil.copyfile(source / ".mcp.json", output / ".mcp.json")
@@ -55,6 +55,7 @@ def main():
                 write_json(output / "mcp.json", {
                     "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
                     "mcpServers": {"myscoutee": {"type": "streamable-http", "url": args.url}}})
+            if target == "openai" and variant == "remote-help":
                 for name in ("plugin.json", ".codex-plugin/plugin.json"):
                     path = output / name
                     data = json.loads(path.read_text())
