@@ -62,7 +62,30 @@ type Connection struct {
 	InviteGroups []GroupScope `json:"inviteGroups"`
 }
 
+type connectionKey struct{}
+type verifiedConnection struct {
+	token      string
+	connection Connection
+}
+
+// WithConnection reuses only this HTTP request's verified handshake. It is never
+// shared with another request, credential or MCP session.
+func (c *Client) WithConnection(ctx context.Context, connection Connection) context.Context {
+	return context.WithValue(ctx, connectionKey{}, verifiedConnection{c.Token, connection})
+}
+
+// OAuthClient binds a fresh adapter to the already configured backend address.
+// A caller cannot override that address or inherit a process-wide identity.
+func (c *Client) OAuthClient(token string) *Client {
+	copy := *c
+	copy.Token, copy.ClientID = token, ""
+	return &copy
+}
+
 func (c *Client) Connection(ctx context.Context) (Connection, error) {
+	if verified, ok := ctx.Value(connectionKey{}).(verifiedConnection); ok && verified.token == c.Token {
+		return verified.connection, nil
+	}
 	var result Connection
 	if c.Token == "" {
 		return result, errors.New("personal API credentials are not configured")
@@ -152,7 +175,9 @@ func (c *Client) request(ctx context.Context, method, path string, body any, pri
 	}
 	if private {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
-		req.Header.Set("X-MyScoutee-Client-Id", c.ClientID)
+		if c.ClientID != "" {
+			req.Header.Set("X-MyScoutee-Client-Id", c.ClientID)
+		}
 	}
 	res, err := c.HTTP.Do(req)
 	if err != nil {

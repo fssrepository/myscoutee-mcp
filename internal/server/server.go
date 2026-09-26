@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"regexp"
 
 	"github.com/fssrepository/myscoutee-mcp/internal/api"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -138,9 +140,8 @@ func New(client *api.Client, private bool) *mcp.Server {
 	return s
 }
 
-// HTTP exposes public help only. Personal API credentials are allowed exclusively
-// on stdio, where the client launches its own process. Remote personal operations
-// need per-user OAuth and must not inherit a shared process-wide API key.
+// Public help and personal OAuth use separate resource URLs. HTTP never inherits
+// a process-wide key; each private request is authenticated by the existing API.
 func PublicHandler(client *api.Client) (http.Handler, error) {
 	if client.Token != "" {
 		return nil, errors.New("HTTP help cannot use personal API credentials")
@@ -149,6 +150,56 @@ func PublicHandler(client *api.Client) (http.Handler, error) {
 	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
 	mux := http.NewServeMux()
 	mux.Handle("/mcp", http.MaxBytesHandler(handler, 1024*1024))
+	publicBase := client.PublicBase
+	if publicBase == "" {
+		publicBase = client.Base
+	}
+	publicURL, err := url.Parse(publicBase)
+	if err != nil || publicURL.Host == "" {
+		return nil, errors.New("invalid public API URL")
+	}
+	metadata := publicURL.Scheme + "://" + publicURL.Host + "/.well-known/oauth-protected-resource/mcp/private"
+	bearer := regexp.MustCompile(`^Bearer (mca_[A-Za-z0-9_-]{43})$`)
+	mux.Handle("/mcp/private", http.MaxBytesHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		challenge := func() {
+			w.Header().Set("WWW-Authenticate", `Bearer resource_metadata="`+metadata+`", scope="myscoutee:api"`)
+			http.Error(w, "MCP authorization required", http.StatusUnauthorized)
+		}
+		values := r.Header.Values("Authorization")
+		if len(values) != 1 {
+			challenge()
+			return
+		}
+		match := bearer.FindStringSubmatch(values[0])
+		if match == nil {
+			challenge()
+			return
+		}
+		personal := client.OAuthClient(match[1])
+		connection, err := personal.Connection(r.Context())
+		if err != nil {
+			challenge()
+			return
+		}
+		ctx := personal.WithConnection(r.Context(), connection)
+		server := New(personal, true)
+		remote := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
+		remote.ServeHTTP(privateResponse{w}, r.WithContext(ctx))
+	}), 1024*1024))
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
 	return mux, nil
 }
+
+// Preserve the SDK's transport headers while forbidding storage of personal
+// discovery and tool results, including by intermediaries.
+type privateResponse struct { http.ResponseWriter }
+func (w privateResponse) WriteHeader(code int) {
+	w.Header().Set("Cache-Control", "private, no-store, no-transform")
+	w.ResponseWriter.WriteHeader(code)
+}
+func (w privateResponse) Write(body []byte) (int, error) {
+	w.Header().Set("Cache-Control", "private, no-store, no-transform")
+	return w.ResponseWriter.Write(body)
+}
+func (w privateResponse) Unwrap() http.ResponseWriter { return w.ResponseWriter }

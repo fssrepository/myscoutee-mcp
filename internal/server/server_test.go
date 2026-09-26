@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -324,5 +325,114 @@ func TestDiscoveryUsesLiveAPICapabilitiesAndFailsClosed(t *testing.T) {
 	}
 	if writes.Load() != 0 {
 		t.Fatal("probe reached data operation")
+	}
+}
+
+// A single shared HTTP process serves independent OAuth identities. Discovery
+// and mutations both traverse the same backend permission boundary each time.
+func TestRemoteOAuthIsolationRevocationAndAnonymousHelp(t *testing.T) {
+	var revoked atomic.Bool
+	var handshakes atomic.Int32
+	tokenA, tokenB := "mca_"+strings.Repeat("a", 43), "mca_"+strings.Repeat("b", 43)
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/help/active" {
+			if r.Header.Get("Authorization") != "" {
+				t.Error("help received credential")
+			}
+			fmt.Fprint(w, `{"activeRevision":{"id":"h","version":2,"lang":"en","active":true,"sections":[]}}`)
+			return
+		}
+		if r.Header.Get("X-MyScoutee-Client-Id") != "" {
+			t.Error("OAuth must not invent a client header")
+		}
+		token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+		if token != tokenA && token != tokenB || token == tokenA && revoked.Load() {
+			w.WriteHeader(401)
+			return
+		}
+		if r.URL.Path == "/integrations/v1/connect" {
+			handshakes.Add(1)
+			if token == tokenA {
+				fmt.Fprint(w, `{"connected":true,"profileId":"alice","groupId":"team","operations":["event"],"inviteGroups":[]}`)
+			} else {
+				fmt.Fprint(w, `{"connected":true,"profileId":"bob","operations":[],"inviteGroups":[]}`)
+			}
+			return
+		}
+		if token != tokenA {
+			t.Error("unauthorized mutation reached backend")
+		}
+		fmt.Fprint(w, `{"id":"alice-event"}`)
+	}))
+	defer upstream.Close()
+	apiClient, _ := api.NewClient(upstream.URL, "", "")
+	apiClient.PublicBase = "https://myscoutee.example/api"
+	handler, err := PublicHandler(apiClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	remote := httptest.NewServer(handler)
+	defer remote.Close()
+	call := func(token, method, args string) (int, string, http.Header) {
+		req, _ := http.NewRequest("POST", remote.URL+"/mcp/private", strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"`+method+`","params":`+args+`}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json, text/event-stream")
+		req.Header.Set("MCP-Protocol-Version", "2025-11-25")
+		if token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		res, e := http.DefaultClient.Do(req)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer res.Body.Close()
+		body, _ := io.ReadAll(res.Body)
+		return res.StatusCode, string(body), res.Header
+	}
+	for _, token := range []string{"", "msc_api_key", "mca_invalid"} {
+		code, _, h := call(token, "tools/list", `{}`)
+		if code != 401 || !strings.Contains(h.Get("WWW-Authenticate"), `https://myscoutee.example/.well-known/oauth-protected-resource/mcp/private`) {
+			t.Fatal("missing OAuth challenge", code, h)
+		}
+	}
+	for _, token := range []string{tokenA, tokenB, tokenA} {
+		before := handshakes.Load()
+		code, body, h := call(token, "tools/list", `{}`)
+		if code != 200 || !strings.Contains(h.Get("Cache-Control"), "no-store") {
+			t.Fatal(code, body)
+		}
+		if handshakes.Load() != before+1 {
+			t.Fatal("handshake repeated or missing")
+		}
+		if token == tokenA && (!strings.Contains(body, `alice`) || strings.Contains(body, `bob`)) {
+			t.Fatal("wrong Alice context", body)
+		}
+		if token == tokenB && (strings.Contains(body, `alice`) || strings.Contains(body, `"name":"event"`)) {
+			t.Fatal("Alice capability leaked to Bob", body)
+		}
+	}
+	code, body, _ := call(tokenB, "tools/call", `{"name":"event","arguments":{"externalId":"e"}}`)
+	if code != 200 || !strings.Contains(body, `"isError":true`) {
+		t.Fatal(code, body)
+	}
+	code, body, _ = call(tokenA, "tools/call", `{"name":"event","arguments":{"externalId":"e"}}`)
+	if code != 200 || !strings.Contains(body, "alice-event") {
+		t.Fatal(code, body)
+	}
+	code, body, _ = call(tokenA, "tools/call", `{"name":"list_help_topics","arguments":{}}`)
+	if code != 200 || strings.Contains(body, `"isError":true`) {
+		t.Fatal(code, body)
+	}
+	revoked.Store(true)
+	code, _, _ = call(tokenA, "tools/list", `{}`)
+	if code != 401 {
+		t.Fatal("revoked token accepted", code)
+	}
+	code, _, _ = call(tokenB, "tools/list", `{}`)
+	if code != 200 {
+		t.Fatal("revocation crossed identities", code)
+	}
+	if apiClient.Token != "" {
+		t.Fatal("process identity mutated")
 	}
 }
