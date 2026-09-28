@@ -104,8 +104,13 @@ continues to provide help without credentials.
    Access and refresh tokens stop working. Connections expire after 90 days.
 
 For a client requiring predefined credentials, **Advanced** contains the manual
-MCP client-key table and Generate action. Register its exact callback URL and
-copy the generated client ID and one-time secret into its configuration. Those
+MCP client-key table and Generate action. Generate immediately adds the client
+ID and one-time secret to the table; copy them into the client configuration.
+There is no name/callback form. Deployment configuration
+`config.mcp-manual-redirect-uris` supplies exact trusted callback URLs for newly
+generated predefined clients. An empty list permits no callback; it does not
+accept arbitrary destinations. Existing clients with a registered callback retain
+that exact restriction. Dev preconfigures only the two loopback Inspector callbacks. Those
 keys have their own revoke actions and are separate from automatically registered
 OAuth permissions. Never paste credentials into chat.
 
