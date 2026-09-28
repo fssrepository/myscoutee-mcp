@@ -1,0 +1,7 @@
+{
+  "name": "myscoutee-oauth-qa-client",
+  "private": true,
+  "description": "Optional external OAuth/MCP QA client; never part of the MCP server runtime",
+  "scripts": { "start": "node launch.mjs" },
+  "dependencies": { "@modelcontextprotocol/inspector": "2.8.0" }
+}
