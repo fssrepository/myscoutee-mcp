@@ -1,0 +1,86 @@
+#root {
+  min-width: 0;
+  width: 100%;
+}
+
+.mantine-Group-root:has(> .mantine-TextInput-root input[aria-label="Search"]) {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.mantine-Group-root:has(> .mantine-TextInput-root input[aria-label="Search"]) > * {
+  width: 100%;
+  flex: none !important;
+}
+
+@media (max-width: 760px) {
+  #root {
+    --app-shell-header-height: 6.5rem;
+    --app-shell-header-offset: 6.5rem;
+  }
+
+  .mantine-AppShell-header > .mantine-Group-root {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding-inline: 0.75rem !important;
+  }
+
+  .mantine-AppShell-header > .mantine-Group-root > :nth-child(2) {
+    order: 3;
+    flex-basis: 100% !important;
+    justify-content: center;
+  }
+
+  .mantine-AppShell-main { overflow: auto !important; }
+  .mantine-AppShell-main > .mantine-Flex-root {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  .mantine-AppShell-main > .mantine-Flex-root > .mantine-Stack-root {
+    flex: none !important;
+    min-height: 0 !important;
+  }
+
+  .mantine-AppShell-main > .mantine-Flex-root > .mantine-Stack-root > .mantine-Flex-root {
+    position: relative !important;
+  }
+
+  .mantine-AppShell-main > .mantine-Flex-root > .mantine-Stack-root > .mantine-Flex-root > .mantine-Flex-root {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: calc(100dvh - 10rem);
+    padding: 0.75rem !important;
+  }
+
+  .mantine-AppShell-main > .mantine-Flex-root > .mantine-Stack-root > .mantine-Flex-root > .mantine-Flex-root > .mantine-Stack-root {
+    width: 100% !important;
+    height: 20rem;
+    min-height: 0;
+  }
+
+  .mantine-AppShell-main > .mantine-Flex-root > .mantine-Group-root {
+    height: 22rem !important;
+    width: 100%;
+    border-top: 1px solid var(--inspector-border-default);
+    background: var(--mantine-color-body);
+    position: relative;
+    z-index: 1;
+  }
+
+  .mantine-AppShell-main > .mantine-Flex-root > .mantine-Group-root > .mantine-Stack-root {
+    width: 100% !important;
+  }
+
+  .resize-handle { display: none; }
+
+  .mantine-AppShell-footer .mantine-Text-root {
+    min-width: 0;
+    white-space: normal !important;
+  }
+
+  .mantine-AppShell-footer > .mantine-Group-root {
+    padding-inline: 0.75rem !important;
+    gap: 0.5rem;
+  }
+}

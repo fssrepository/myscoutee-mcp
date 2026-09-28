@@ -152,6 +152,13 @@ keeps its own isolated protocol/provider checks and evidence.
 Protocol references: [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
 and [official Inspector](https://modelcontextprotocol.io/docs/tools/inspector).
 
+## MCP Inspector
+
+With the local dev stack running, run `make oauth-client` from this repository.
+Open the loopback URL printed in the terminal, then switch **MyScoutee** on to
+sign in and approve access. Stop with `Ctrl+C`.
+For another installation: `make oauth-client MCP_URL=https://your-host/mcp/private`.
+
 ## Unpublished plugin
 
 `plugins/myscoutee` contains the portable manifest, Codex compatibility manifest,
