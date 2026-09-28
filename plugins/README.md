@@ -29,7 +29,9 @@ The local package needs Docker, the locally built `myscoutee-mcp:1.3.0` image an
 the API URL/key/client-ID environment variables described in the main README.
 The remote-help package exposes anonymous help. The remote-private package
 uses the profile-owned OAuth connection created under the app’s API keys.
-Client IDs and secrets are configured outside the package; see the main README. A Claude Code
+Remote URL-based OAuth uses automatic registration and MyScoutee login/approval.
+For predefined clients, generate credentials under Advanced and configure them
+outside the package; see the main README. A Claude Code
 plugin ZIP does not imply claude.ai connector-directory approval.
 
 Both packages include the existing MyScoutee app logo in `assets/logo.png`.

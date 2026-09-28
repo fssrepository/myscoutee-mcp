@@ -93,37 +93,59 @@ a process-wide private key: it cannot expose one user's operations to everybody.
 Use the deployed HTTPS `/mcp/private` endpoint. The anonymous `/mcp` endpoint
 continues to provide help without credentials.
 
-1. In the app, select the profile/group whose API permissions should apply.
-   Open Profile editor → Affiliate → Client keys → **AI / MCP connections**.
-2. Create one connection per AI client using that client's **exact callback URL**.
-   Copy the MCP URL, client ID and one-time secret into the AI client's advanced
-   connector settings. ChatGPT/Claude support predefined OAuth clients; no public
-   dynamic registration endpoint is provided. Never paste secrets into chat.
-3. Connect, sign in through the normal MyScoutee login, verify the displayed
-   profile/group and approve access. Selecting another group in the application
-   does not retarget this connection.
-4. Revoke the row to invalidate access and refresh tokens. Connections expire
-   after 90 days. In local/demo mode only the settings persist; they cannot
-   establish a remote personal connection.
+1. Copy the MCP URL from Profile editor → Affiliate → AI / MCP connections
+   into the external client's connection settings and choose Connect.
+2. Sign in through the normal MyScoutee login, check the displayed profile/group,
+   and approve access. An existing signed-in session can go directly to approval.
+   Public dynamic registration uses S256 PKCE and needs no copied client secret.
+3. Return to the client and use its authenticated connection. The approved
+   profile stays fixed; changing groups in the app does not retarget it.
+4. Revoke that connection under **OAuth permissions** in the main app popup.
+   Access and refresh tokens stop working. Connections expire after 90 days.
 
-The same integration-key owner manages MCP client secrets (separate `mcp`
-scope). Authorization codes are one-use, five-minute, S256 PKCE-bound records.
-The token endpoint supports `client_secret_basic` and `client_secret_post`,
-resource-bound one-hour bearer tokens and rotating refresh tokens; replay revokes
-the refresh family. Only hashes persist. Both discovery and execution traverse
-the normal API authentication, membership and operation checks. Ordinary API keys
-are not accepted as remote OAuth bearer tokens. Tokens never reach help requests.
+For a client requiring predefined credentials, **Advanced** contains the manual
+MCP client-key table and Generate action. Register its exact callback URL and
+copy the generated client ID and one-time secret into its configuration. Those
+keys have their own revoke actions and are separate from automatically registered
+OAuth permissions. Never paste credentials into chat.
 
-Nginx routes the protected-resource and authorization-server metadata,
-`/api/mcp/oauth/token`, `/mcp/private`, and the SPA consent route `/mcp/authorize`.
-The configured integration public origin and `MYSCOUTEE_PUBLIC_API_BASE_URL`
-must describe the same installation. No caller-supplied Host chooses the issuer.
-User revocation is available in the app; automatic DCR, CIMD and token revocation
-protocol endpoints are not advertised. Live client acceptance remains a QA gate.
+Google/Firebase/email are installation-configured MyScoutee sign-in methods.
+The external client receives MyScoutee OAuth tokens, never the Google/Firebase
+login token. The existing dev backend supports demo sign-in when explicitly
+enabled; browser-only IndexedDB local mode cannot serve external OAuth.
 
-Protocol references: [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization),
-[OpenAI authentication](https://developers.openai.com/plugins/build/auth),
-[Claude custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
+The integration-key owner manages profile-bound MCP permissions (separate `mcp`
+scope). Public registration stores client metadata without granting profile access.
+Authorization codes are one-use, five-minute, S256 PKCE-bound records. The token
+endpoint supports public `none`, `client_secret_basic` and `client_secret_post`,
+resource-bound one-hour access tokens and rotating refresh tokens; replay revokes
+the refresh family. Only token hashes persist. Both discovery and execution use
+the existing API authentication, membership and operation checks. Ordinary API
+keys are not remote OAuth bearer tokens. Tokens never reach help requests.
+
+Nginx routes protected-resource and authorization-server metadata, bounded
+`/api/mcp/oauth/register`, `/api/mcp/oauth/token`, `/mcp/private`, and the existing
+SPA authorization route `/mcp/authorize`. The configured integration public origin
+and `MYSCOUTEE_PUBLIC_API_BASE_URL` must describe the same installation. Caller
+Host headers cannot choose the issuer. CIMD and a token-revocation protocol endpoint
+are not advertised; users revoke permissions through the app.
+
+### Optional external development client
+
+Run `make oauth-client` from this repository (Node.js 22.19+). This starts the
+pinned official MCP Inspector separately from the production MCP server, with
+`http://localhost/mcp/private` as its default target. For another installation,
+use `make oauth-client MCP_URL=https://your-deployment.example/mcp/private`.
+Follow the local URL printed by Inspector; its URL includes a session secret,
+so do not publish the startup log. Select MyScoutee and connect. See
+[client setup and cleanup](tools/oauth-client/README.md).
+
+Inspector verification does not prove a ChatGPT or Claude browser conversation.
+Actual host acceptance is a separate post-deployment smoke test. Backend QA
+keeps its own isolated protocol/provider checks and evidence.
+
+Protocol references: [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+and [official Inspector](https://modelcontextprotocol.io/docs/tools/inspector).
 
 ## Unpublished plugin
 
