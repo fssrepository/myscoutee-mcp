@@ -1,0 +1,58 @@
+[
+  {
+    "task_id": "MSC-101",
+    "title": "Introduce the MCP service and scoped OAuth integration",
+    "workstream": "Tooling",
+    "started": "2026-09-26",
+    "finished": "2026-09-26",
+    "tokens_million": 6.37,
+    "api_equivalent_usd_estimate": 7.98,
+    "active_hours": 0.1,
+    "allocated_hours": 0.1,
+    "models": "gpt-6-astra",
+    "reasoning": "high",
+    "evidence": "Estimated task allocation of measured daily account totals"
+  },
+  {
+    "task_id": "MSC-103",
+    "title": "Qualify group isolation, MCP connections and v1.3.0 deployment",
+    "workstream": "QA and release",
+    "started": "2026-09-28",
+    "finished": "2026-09-28",
+    "tokens_million": 346.05,
+    "api_equivalent_usd_estimate": 420.58,
+    "active_hours": 10.7,
+    "allocated_hours": 10.67,
+    "models": "gpt-6-astra; gpt-6-sol",
+    "reasoning": "high; xhigh",
+    "evidence": "Estimated task allocation of measured daily account totals"
+  },
+  {
+    "task_id": "MSC-109",
+    "title": "Separate Compose environments and disable dev/E2E auto-restart",
+    "workstream": "Operations",
+    "started": "2026-09-30",
+    "finished": "2026-09-30",
+    "tokens_million": 2.56,
+    "api_equivalent_usd_estimate": 3.99,
+    "active_hours": 0.2,
+    "allocated_hours": 0.17,
+    "models": "gpt-6-astra",
+    "reasoning": "high",
+    "evidence": "Estimated task allocation of measured daily account totals"
+  },
+  {
+    "task_id": "MSC-110",
+    "title": "Reconstruct the Project and preserve restorable Git records",
+    "workstream": "Project administration (AI-assisted)",
+    "started": "2026-09-30",
+    "finished": "2026-10-01",
+    "tokens_million": 12.0,
+    "api_equivalent_usd_estimate": 18.47,
+    "active_hours": 0.749,
+    "allocated_hours": 0.75,
+    "models": "gpt-6-astra",
+    "reasoning": "high",
+    "evidence": "Measured maintenance-session tokens; estimated allocation by backup snapshot ownership (9:2:2:2 across four Projects)"
+  }
+]

@@ -1,0 +1,5 @@
+task_id,title,workstream,started,finished,tokens_million,api_equivalent_usd_estimate,active_hours,allocated_hours,models,reasoning,evidence
+MSC-101,Introduce the MCP service and scoped OAuth integration,Tooling,2026-09-26,2026-09-26,6.37,7.98,0.1,0.1,gpt-6-astra,high,Estimated task allocation of measured daily account totals
+MSC-103,"Qualify group isolation, MCP connections and v1.3.0 deployment",QA and release,2026-09-28,2026-09-28,346.05,420.58,10.7,10.67,gpt-6-astra; gpt-6-sol,high; xhigh,Estimated task allocation of measured daily account totals
+MSC-109,Separate Compose environments and disable dev/E2E auto-restart,Operations,2026-09-30,2026-09-30,2.56,3.99,0.2,0.17,gpt-6-astra,high,Estimated task allocation of measured daily account totals
+MSC-110,Reconstruct the Project and preserve restorable Git records,Project administration (AI-assisted),2026-09-30,2026-10-01,12.0,18.47,0.749,0.75,gpt-6-astra,high,Measured maintenance-session tokens; estimated allocation by backup snapshot ownership (9:2:2:2 across four Projects)
