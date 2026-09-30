@@ -1,0 +1,13 @@
+name: myscoutee-mcp
+
+services:
+  mcp:
+    extends:
+      file: compose.common.yaml
+      service: mcp
+    image: ${MCP_DEV_IMAGE:-myscoutee-mcp:1.3.0-dev}
+    restart: "no"
+    environment:
+      MYSCOUTEE_API_BASE_URL: ${MYSCOUTEE_DEV_API_BASE_URL:?Set the dev API base URL ending in /api}
+    ports:
+      - "127.0.0.1:${MCP_DEV_PORT:-8091}:8080"

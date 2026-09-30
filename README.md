@@ -58,15 +58,48 @@ and Docker builds do not require that sibling checkout.
 
 ## Remote help
 
-Set `MYSCOUTEE_API_BASE_URL` to the existing API root ending in `/api` (HTTPS;
+Set the selected mode's API URL variable to the existing API root ending in `/api` (HTTPS;
 anonymous help may use HTTP on the private Compose network; personal credentials
-require HTTPS except on loopback). Start the optional Compose service:
+require HTTPS except on loopback). Select the Compose environment explicitly:
 
 ```sh
-MYSCOUTEE_API_BASE_URL=https://your-deployment.example/api docker compose up -d
+# Development: no automatic restart; also the default for plain docker compose.
+MYSCOUTEE_DEV_API_BASE_URL=https://your-dev-deployment.example/api \
+  docker compose -f compose.dev.yaml up -d --build
 ```
 
-The host port binds only to `127.0.0.1:8091`. Proxy `/mcp` through the deployment's
+For E2E, point explicitly at the backend under test:
+
+```sh
+MYSCOUTEE_E2E_API_BASE_URL=https://your-e2e-deployment.example/api \
+  docker compose -f compose.e2e.yaml up -d --build
+```
+
+For production:
+
+```sh
+MYSCOUTEE_API_BASE_URL=https://your-deployment.example/api \
+  docker compose -f compose.prod.yaml up -d --build
+```
+
+| Mode | Image override | API URL variable | Default host port | Restart |
+| --- | --- | --- | --- | --- |
+| Dev | `MCP_DEV_IMAGE` (`1.3.0-dev`) | `MYSCOUTEE_DEV_API_BASE_URL` | 8091 | `no` |
+| E2E | `MCP_E2E_IMAGE` (`1.3.0-e2e`) | `MYSCOUTEE_E2E_API_BASE_URL` | 18091 | `no` |
+| Prod | `MCP_IMAGE` (`1.3.0-prod`) | `MYSCOUTEE_API_BASE_URL` | 8091 | `unless-stopped` |
+
+Each mode has a separate Compose project. The default project remains
+`myscoutee-mcp` for existing development usage; E2E and production use
+`myscoutee-mcp-e2e` and `myscoutee-mcp-prod`. `MCP_DEV_PORT`, `MCP_E2E_PORT` and
+`MCP_PROD_PORT` override their respective loopback ports. Set different ports
+when running dev and production on the same host. All modes reuse
+`compose.common.yaml` for service settings. A production image/API variable
+does not silently select the development or E2E upstream.
+Use the same `-f` selection for subsequent `logs`, `stop` and `down` commands.
+The backend's integrated dev/E2E/production stacks retain their own Compose
+entrypoints; these files run the standalone MCP service.
+
+The host ports bind only to `127.0.0.1`. Proxy `/mcp` through the deployment's
 existing HTTPS reverse proxy, preserving headers and the path. `/healthz` is a
 process health endpoint; it does not claim upstream API health. The service runs
 unprivileged, with a read-only filesystem, dropped capabilities and a 128 MiB
