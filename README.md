@@ -10,7 +10,7 @@ repository, with separate build targets. Nothing is published by a build.
 | --- | --- | --- |
 | Remote HTTP | `list_help_topics`, `read_help_topic`, `search_help`; HU/EN help resources | Anonymous, read-only help |
 | Local stdio without a key | Same help tools | Anonymous |
-| Local stdio with a key | Help plus the API-authorized subset of `event`, `encounters`, `createAssets`, `createEvents`, `inviteParticipants`, `inviteGroupParticipants` | Existing integration API key and its client ID |
+| Local stdio with a key | Help plus the API-authorized subset of `event`, `encounters`, `createAssets`, `createEvents`, `createCampaigns` (Work only), `inviteParticipants`, `inviteGroupParticipants` | Existing integration API key and its client ID |
 
 Help is fetched on demand from `GET /api/help/active?lang=hu|en`, the application's
 existing active-revision API. There is **no help copy in this repository**.

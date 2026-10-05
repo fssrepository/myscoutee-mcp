@@ -106,6 +106,8 @@ func New(client *api.Client, private bool) *mcp.Server {
 			switch op.Name {
 			case "createEvents":
 				description += " Creates events and imported participants in the key's issuing profile/group. For a different group use a connection with that group's profile key; a prompt or app group switch cannot retarget this key. Check the API-authorized connection context below before creating events."
+			case "createCampaigns":
+				description += " Creates draft campaigns in the key's issuing Work profile/group. For a different group use a connection with that group's profile key; a prompt or app group switch cannot retarget this key. Publish or edit drafts in the application campaign editor."
 			case "createAssets":
 				description += " Requires a base-profile key; a group-profile key cannot create assets."
 			case "inviteGroupParticipants":

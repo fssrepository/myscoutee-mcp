@@ -436,3 +436,71 @@ func TestRemoteOAuthIsolationRevocationAndAnonymousHelp(t *testing.T) {
 		t.Fatal("process identity mutated")
 	}
 }
+
+func TestCampaignCreationIsDiscoverableOnlyForWorkAndUsesItsConnection(t *testing.T) {
+	for _, work := range []bool{false, true} {
+		t.Run(fmt.Sprint(work), func(t *testing.T) {
+			var calls atomic.Int32
+			upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Header.Get("Authorization") != "Bearer profile-key" {
+					t.Error("profile key was not preserved")
+				}
+				if r.URL.Path == "/integrations/v1/connect" {
+					if work {
+						fmt.Fprint(w, `{"connected":true,"profileId":"work-profile","groupId":"myscoutee-work","operations":["createCampaigns"],"inviteGroups":[]}`)
+					} else {
+						fmt.Fprint(w, `{"connected":true,"profileId":"dating-profile","operations":[],"inviteGroups":[]}`)
+					}
+					return
+				}
+				if r.URL.Path != "/integrations/v1/campaigns" || r.Method != "POST" {
+					t.Errorf("unexpected operation: %s %s", r.Method, r.URL.Path)
+				}
+				var body map[string]any
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+					t.Error(err)
+				}
+				if len(body["items"].([]any)) != 1 {
+					t.Error("missing campaign")
+				}
+				calls.Add(1)
+				fmt.Fprint(w, `{"items":[]}`)
+			}))
+			defer upstream.Close()
+			client, _ := api.NewClient(upstream.URL, "profile-key", "client")
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			a, b := mcp.NewInMemoryTransports()
+			ss, err := New(client, true).Connect(ctx, a, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer ss.Close()
+			cs, err := mcp.NewClient(&mcp.Implementation{Name: "test"}, nil).Connect(ctx, b, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer cs.Close()
+			list, err := cs.ListTools(ctx, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			found := false
+			for _, tool := range list.Tools {
+				if tool.Name == "createCampaigns" {
+					found = true
+				}
+			}
+			if found != work {
+				t.Fatalf("campaign visibility = %v, work = %v", found, work)
+			}
+			result, err := cs.CallTool(ctx, &mcp.CallToolParams{Name: "createCampaigns", Arguments: map[string]any{"request": map[string]any{"items": []any{map[string]any{"id": "b8186d5d-e222-4e22-9b84-486918a35b11", "title": "Build a team", "description": "Collaborate", "kind": "business", "category": "technology"}}}}})
+			if work && (err != nil || result.IsError || calls.Load() != 1) {
+				t.Fatalf("campaign call: %+v %v calls=%d", result, err, calls.Load())
+			}
+			if !work && ((err == nil && !result.IsError) || calls.Load() != 0) {
+				t.Fatal("Dating key reached campaign creation")
+			}
+		})
+	}
+}

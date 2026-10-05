@@ -8,7 +8,7 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--check',action='store_true')
 args=parser.parse_args()
 source=yaml.safe_load((root.parent/'myscoutee-client/openapi.yaml').read_text())
-allowed={'event','encounters','inviteParticipants','inviteGroupParticipants','createAssets','createEvents'}
+allowed={'event','encounters','inviteParticipants','inviteGroupParticipants','createAssets','createEvents','createCampaigns'}
 def resolve(value):
  if isinstance(value,list): return [resolve(x) for x in value]
  if not isinstance(value,dict): return value
@@ -41,4 +41,4 @@ content=json.dumps(operations,indent=2,ensure_ascii=False)+'\n'
 if args.check:
  assert out.read_text()==content,'Run tools/sync-api-contract.py'
 else: out.write_text(content)
-print('PASS: six MCP API schemas match myscoutee-client/openapi.yaml')
+print(f'PASS: {len(operations)} MCP API schemas match myscoutee-client/openapi.yaml')
