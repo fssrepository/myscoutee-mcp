@@ -8,6 +8,9 @@ services:
     image: ${MCP_DEV_IMAGE:-myscoutee-mcp:1.5.0-dev}
     restart: "no"
     environment:
-      MYSCOUTEE_API_BASE_URL: ${MYSCOUTEE_DEV_API_BASE_URL:?Set the dev API base URL ending in /api}
+      MYSCOUTEE_API_BASE_URL: ${MYSCOUTEE_DEV_API_BASE_URL:-http://host.docker.internal/api}
+      MYSCOUTEE_PUBLIC_API_BASE_URL: ${MYSCOUTEE_DEV_API_BASE_URL:-http://localhost/api}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:${MCP_DEV_PORT:-8091}:8080"

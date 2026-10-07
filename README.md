@@ -124,15 +124,19 @@ and Docker builds do not require that sibling checkout.
 
 ## Remote help
 
-Set the selected mode's API URL variable to the existing API root ending in `/api` (HTTPS;
-anonymous help may use HTTP on the private Compose network; personal credentials
-require HTTPS except on loopback). Select the Compose environment explicitly:
+Development defaults to the existing local backend at `http://localhost/api`.
+Inside the container, `host.docker.internal` reaches the host, including on Linux
+through the configured host-gateway mapping. Start the standalone dev service with:
 
 ```sh
 # Development: no automatic restart; also the default for plain docker compose.
-MYSCOUTEE_DEV_API_BASE_URL=https://your-dev-deployment.example/api \
-  docker compose -f compose.dev.yaml up -d --build
+docker compose -f compose.dev.yaml up -d --build
 ```
+
+To use another development backend, set the optional `MYSCOUTEE_DEV_API_BASE_URL`
+to its API root ending in `/api`; it also becomes the public API address.
+Use HTTPS for remote deployments. Anonymous help may use HTTP on the private
+Compose network; personal credentials require HTTPS except on loopback.
 
 For E2E, point explicitly at the backend under test:
 
@@ -150,7 +154,7 @@ MYSCOUTEE_API_BASE_URL=https://your-deployment.example/api \
 
 | Mode | Image override | API URL variable | Default host port | Restart |
 | --- | --- | --- | --- | --- |
-| Dev | `MCP_DEV_IMAGE` (`1.5.0-dev`) | `MYSCOUTEE_DEV_API_BASE_URL` | 8091 | `no` |
+| Dev | `MCP_DEV_IMAGE` (`1.5.0-dev`) | `MYSCOUTEE_DEV_API_BASE_URL` (optional; local API by default) | 8091 | `no` |
 | E2E | `MCP_E2E_IMAGE` (`1.5.0-e2e`) | `MYSCOUTEE_E2E_API_BASE_URL` | 18091 | `no` |
 | Prod | `MCP_IMAGE` (`1.5.0-prod`) | `MYSCOUTEE_API_BASE_URL` | 8091 | `unless-stopped` |
 
