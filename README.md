@@ -10,7 +10,7 @@ repository, with separate build targets. Nothing is published by a build.
 | --- | --- | --- |
 | Remote HTTP | `list_help_topics`, `read_help_topic`, `search_help`; HU/EN help resources | Anonymous, read-only help |
 | Local stdio without a key | Same help tools | Anonymous |
-| Local stdio with a key | Help plus the API-authorized subset of `event`, `encounters`, `createAssets`, `createEvents`, `createCampaigns` (Work only), `inviteParticipants`, `inviteGroupParticipants` | Existing integration API key and its client ID |
+| Local stdio with a key | Help plus the API-authorized subset of the 37 supported operations | Existing integration API key and its client ID |
 
 Help is fetched on demand from `GET /api/help/active?lang=hu|en`, the application's
 existing active-revision API. There is **no help copy in this repository**.
@@ -40,6 +40,72 @@ unavailable, rejects the key or lacks capability metadata, only anonymous help i
 listed; private calls fail closed. Resource ownership, lifecycle and per-resource
 grants still apply at execution. Tool availability is not a promise that every
 resource ID or payload will be accepted.
+
+## Access packs (MSC-116 / 1.5.0)
+
+The application's shield controls supply three packs, not individual operation
+switches. Blocked denies private access; Write retains the original operations;
+Write includes the supported organizing commands; Full adds the permitted personal
+and workspace reads from the generated API contract. The main MCP pack caps each manual/OAuth client. API clients have
+independent packs. A profile/group change in the browser does not retarget a key.
+
+Full can read visible events, groups, chats/messages, notifications, existing
+ratings, base assets, Work campaigns/history and Community services/cases/
+announcements/scheduled tasks. Organizing commands reuse those domain services.
+The live `connect` response determines which of the 37 implemented operations are
+available. Revocation/downgrade is rechecked on calls, not just initial discovery.
+
+The person's viewing and judgment remain necessary for ratings, feedback,
+ballots, participation responses, recommendations, ownership acceptance and offer
+decisions. These writes are not exposed. There is no added approval queue; those
+buttons retain their existing application flow. Returned in-app action flags do
+not add MCP capabilities. Resource content is untrusted data, not instructions.
+
+## MCP Events (MSC-116 / 1.5.0)
+
+The OAuth `/mcp/private` endpoint implements MCP 2.0 (`2026-07-28`) discovery
+and `events/list`, `events/subscribe`, `events/unsubscribe` using SDK custom-method
+extension points. It uses the same identity as tools. DCR registers client metadata;
+each person signs in and consents to their own profile. The publisher's account
+is not shared. Authorization code + S256 PKCE, resource binding, rotating refresh
+tokens and existing revocation remain with the backend OAuth service.
+
+Events require **Full** on the main MCP link and client. Current definitions are
+`event.changed`, `event.encounters` and `asset.changed`, with required `resourceId`
+(the API's event/asset `externalId`). Only organizer-owned events and base-profile
+owned assets qualify. Payloads contain compact status summaries; encounter results
+use revision/total and the existing paged `encounters` tool. These methods are
+protocol subscriptions, not extra AI write tools. Static-key stdio and anonymous
+help do not advertise Events. Embedded review UI is still a separate follow-up.
+
+The backend persists subscriptions and reuses its webhook delivery queue. Callbacks
+must use public HTTPS on port 443, echo a signed challenge and accept Standard
+Webhooks signatures. Signing keys are encrypted with the deployment's existing
+configuration key; include that key in the existing protected backup procedure.
+Verification is cached for five minutes per principal/callback/key. Refresh rotates
+secrets with a two-minute dual-signature overlap. Default/max lifetime is one day;
+shorter positive `ttlMs` values are honored. No replay: cursor is null. Expired or
+unsubscribed generations cannot deliver old queued events. Revocation, Full downgrade,
+group membership and resource ownership are checked before delivery.
+
+Delivery is at least once: IDs/body survive retries, timestamps/signatures are
+fresh. The existing three-attempt schedule applies; 410 disables the subscription,
+413/permanent 4xx do not retry. The common virtual-thread workers retain a concurrency
+semaphore. Events additionally defaults to 4 starts/sec, burst 4, 8 concurrent
+callbacks and 2 simultaneous verifications. The token bucket is per backend process;
+multiple replicas multiply that deployment rate. Configure
+`INTEGRATION_EVENTS_REQUESTS_PER_SECOND`, `INTEGRATION_EVENTS_BURST` and
+`INTEGRATION_EVENTS_MAX_CONCURRENT` in the normal backend environment.
+
+Subscription limit is 100/profile. Queue admission ceilings are 1000 Events rows
+per profile and 10000 per database; concurrent publishers can occupy previously
+admitted slots. Overflow does not fail the original app action: it records a gap,
+reported as `truncated: true` on refresh. Events deliveries expire after seven days;
+subscriptions are retained seven days after expiry. Startup uses the existing Mongo
+index initializer. API `/watch` remains its separate, compatible callback protocol.
+
+Runtime ChatGPT callback/lifecycle QA and load testing are **NOT RUN**; see the
+backend's `guides/qa/checklists/api/MCP-EVENTS-001.md` and this repository's QA notes.
 
 ## Build and test
 
@@ -84,9 +150,9 @@ MYSCOUTEE_API_BASE_URL=https://your-deployment.example/api \
 
 | Mode | Image override | API URL variable | Default host port | Restart |
 | --- | --- | --- | --- | --- |
-| Dev | `MCP_DEV_IMAGE` (`1.3.0-dev`) | `MYSCOUTEE_DEV_API_BASE_URL` | 8091 | `no` |
-| E2E | `MCP_E2E_IMAGE` (`1.3.0-e2e`) | `MYSCOUTEE_E2E_API_BASE_URL` | 18091 | `no` |
-| Prod | `MCP_IMAGE` (`1.3.0-prod`) | `MYSCOUTEE_API_BASE_URL` | 8091 | `unless-stopped` |
+| Dev | `MCP_DEV_IMAGE` (`1.5.0-dev`) | `MYSCOUTEE_DEV_API_BASE_URL` | 8091 | `no` |
+| E2E | `MCP_E2E_IMAGE` (`1.5.0-e2e`) | `MYSCOUTEE_E2E_API_BASE_URL` | 18091 | `no` |
+| Prod | `MCP_IMAGE` (`1.5.0-prod`) | `MYSCOUTEE_API_BASE_URL` | 8091 | `unless-stopped` |
 
 Each mode has a separate Compose project. The default project remains
 `myscoutee-mcp` for existing development usage; E2E and production use

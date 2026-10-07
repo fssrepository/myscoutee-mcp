@@ -8,7 +8,45 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--check',action='store_true')
 args=parser.parse_args()
 source=yaml.safe_load((root.parent/'myscoutee-client/openapi.yaml').read_text())
-allowed={'event','encounters','inviteParticipants','inviteGroupParticipants','createAssets','createEvents','createCampaigns'}
+allowed={
+ 'announcementAction',
+ 'announcementDetails',
+ 'assetDetails',
+ 'campaignAction',
+ 'campaignDetails',
+ 'campaignHistory',
+ 'caseAction',
+ 'caseDetails',
+ 'chatDetails',
+ 'chatMessages',
+ 'createAssets',
+ 'createCampaigns',
+ 'createEvents',
+ 'encounters',
+ 'event',
+ 'eventDetails',
+ 'groupDetails',
+ 'inviteGroupParticipants',
+ 'inviteParticipants',
+ 'listAnnouncements',
+ 'listAssets',
+ 'listCampaigns',
+ 'listCases',
+ 'listChats',
+ 'listEvents',
+ 'listGroups',
+ 'listNotifications',
+ 'listRatings',
+ 'listScheduledTasks',
+ 'listServices',
+ 'saveAnnouncement',
+ 'saveCase',
+ 'saveScheduledTask',
+ 'scheduledTaskAction',
+ 'serviceAction',
+ 'serviceDetails',
+ 'updateCampaign',
+}
 def resolve(value):
  if isinstance(value,list): return [resolve(x) for x in value]
  if not isinstance(value,dict): return value

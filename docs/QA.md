@@ -70,3 +70,13 @@ Extend the existing API and help regression micros; this is not a PASS ledger.
   row appears in the new profile. Mobile layout and consent Back/X need real QA.
 
 Automated OAuth/unit/transport checks do not mark these live client cases PASS.
+
+## MCP Events — NOT RUN
+
+MSC-116's stable execution checklist is in the backend repository at
+`guides/qa/checklists/api/MCP-EVENTS-001.md`. It covers MCP 2.0 discovery, shared DCR
+registration with independent user grants, signed challenge/rotation, restart and
+expiry, resource authorization/revocation, SSRF/DNS rebinding, bounded retries,
+virtual-thread concurrency, callback rate throttling, queue overflow and ChatGPT
+Work/Cloud receipt. Go HTTP adapter and Java protocol regression sources were added;
+source compilation does not mark execution or live plugin interoperability PASS.

@@ -64,6 +64,7 @@ type Connection struct {
 	ProfileName  string       `json:"profileName"`
 	GroupID      string       `json:"groupId"`
 	GroupName    string       `json:"groupName"`
+	AccessMode   string       `json:"accessMode"`
 	Operations   []string     `json:"operations"`
 	InviteGroups []GroupScope `json:"inviteGroups"`
 }

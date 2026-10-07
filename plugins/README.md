@@ -25,7 +25,7 @@ the common manifest. Build does not bundle credentials or the server image.
 | OpenAI | Root `plugin.json` + `mcp.json`, Codex compatibility overlay | ChatGPT/Codex plugin submission; public MCP submissions require a deployed HTTPS endpoint |
 | Claude | `.claude-plugin/plugin.json` + `.mcp.json` | Claude Code plugin directory/package; subsequent marketplace publication is separate |
 
-The local package needs Docker, the locally built `myscoutee-mcp:1.3.0` image and
+The local package needs Docker, the locally built `myscoutee-mcp:1.5.0` image and
 the API URL/key/client-ID environment variables described in the main README.
 The remote-help package exposes anonymous help. The remote-private package
 uses the profile-owned OAuth connection created under the app’s API keys.

@@ -266,7 +266,9 @@ func TestDiscoveryUsesLiveAPICapabilitiesAndFailsClosed(t *testing.T) {
 		}
 		switch phase.Load() {
 		case 0:
-			fmt.Fprint(w, `{"connected":true,"profileId":"team-profile","groupId":"g1","groupName":"Team One","operations":["createEvents","inviteGroupParticipants"],"inviteGroups":[{"id":"g1","name":"Team One"}]}`)
+			fmt.Fprint(w, `{"connected":true,"profileId":"team-profile","groupId":"g1","groupName":"Team One","accessMode":"full","operations":["createEvents","inviteGroupParticipants","listRatings"],"inviteGroups":[{"id":"g1","name":"Team One"}]}`)
+		case 4:
+			fmt.Fprint(w, `{"connected":true,"profileId":"team-profile","accessMode":"write","operations":["createEvents","inviteGroupParticipants"],"inviteGroups":[]}`)
 		case 1:
 			fmt.Fprint(w, `{"connected":true,"profileId":"team-profile","groupId":"g1","operations":[],"inviteGroups":[]}`)
 		case 2:
@@ -294,7 +296,7 @@ func TestDiscoveryUsesLiveAPICapabilitiesAndFailsClosed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 5 {
+	if len(listed.Tools) != 6 {
 		t.Fatalf("unexpected advertised tools: %+v", listed.Tools)
 	}
 	if listed.CacheScope != "private" || listed.TTLMs != 0 {
@@ -311,6 +313,15 @@ func TestDiscoveryUsesLiveAPICapabilitiesAndFailsClosed(t *testing.T) {
 	result, err := cs.CallTool(ctx, &mcp.CallToolParams{Name: "inviteGroupParticipants", Arguments: map[string]any{"groupId": "other", "request": map[string]any{"participantIds": []string{"p1"}}}})
 	if err != nil || !result.IsError {
 		t.Fatalf("unauthorized target: %+v %v", result, err)
+	}
+	phase.Store(4)
+	listed, err = cs.ListTools(ctx, nil)
+	if err != nil || len(listed.Tools) != 5 {
+		t.Fatalf("Full-to-Write downgrade retained a read: %+v %v", listed, err)
+	}
+	result, err = cs.CallTool(ctx, &mcp.CallToolParams{Name: "listRatings", Arguments: map[string]any{}})
+	if err != nil || !result.IsError {
+		t.Fatalf("a stale Full read survived downgrade: %+v %v", result, err)
 	}
 	for _, nextPhase := range []int32{1, 2, 3} {
 		phase.Store(nextPhase)
