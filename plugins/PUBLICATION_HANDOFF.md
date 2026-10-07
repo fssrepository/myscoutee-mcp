@@ -1,0 +1,197 @@
+# MyScoutee plugin publication — continuation handoff
+
+Updated 2026-10-07, MSC-119. **Dev preparation; not submitted or published.**
+Read this first when resuming publication. Implementation version: **1.6.0**.
+Task: https://github.com/fssrepository/myscoutee-roadmap/issues/157.
+
+## Scope and current user decisions
+
+- Prepare ChatGPT and Claude publication using the existing MCP server and
+  existing package builder. Embedded interfaces are explicitly out of scope.
+- Full application/OAuth/Events/browser/load QA is deferred until tomorrow on
+  master. Include the other Codex session's additions to the shared QA ledger.
+  This handoff does not authorize browser actions or a marketplace submission.
+- First consolidate the active backend/frontend/client/MCP branches by MSC task,
+  merge their exact resulting histories into master and archive the old branches.
+  See the backend consolidation record for old/new commit identities; old feature
+  branch hashes in historical guides do not identify the new master commit.
+- Free hosting, subscription-cancellation research and the historical unexplained
+  Docker rebuild are no longer open tasks. Do not reopen them.
+- Reuse services, permission packs and normal UI decisions. Do not add personal
+  rating, interest, feedback, ballot, participation or offer-decision writes.
+
+## Completed dev preparation
+
+| Item | Owner / evidence |
+| --- | --- |
+| One source for manifests | `myscoutee/plugin.json` and `myscoutee/mcp.json`; `build.py --sync` generates the tracked Codex overlay and `.mcp.json`. Both now use 1.6.0. Builds reject drift. |
+| Listing | Subtitle fits 30 characters; full description covers four packs, Work/Community, role statistics, Events and human-decision limits. Existing brand identity retained pending publisher verification. |
+| Known public URLs | Public project page and issue tracker identify MyScoutee and provide support. `websiteURL` and `supportURL` are populated; no invented policy URLs. |
+| Branding | Existing 1024×1024 transparent PNG, visually inspected; reused for logo/composer icon. No new branding or image generation. |
+| Review cases | Private: `myscoutee/plugin.json` → `extensions.com.openai.review.test_cases`. Anonymous help: `review/remote-help.json`. Each has 5 positive and 3 negative cases, all **NOT RUN**. |
+| Release notes | Included in canonical `extensions.com.openai.publication.release_notes`; generated into the compatible OpenAI manifest. |
+| Tool metadata | Explicit read-only, destructive and open-world booleans. Reads and additive external-ID imports are distinguished from writes that may replace/revoke state. All tools are confined to this deployment's catalog/authorized profiles. |
+| Actual ZIP validation | `validate.py`, invoked by the existing builder; checks metadata, versions, transport, assets, cases and upload restrictions. Strict submission mode additionally rejects missing remote endpoint/review declarations. |
+
+The annotations do not grant permission or add any callable operation. API
+capability discovery, ownership/role checks, consent and mutations stay unchanged.
+
+## Resume commands (no application build, server restart or browser actions)
+
+From `myscoutee-mcp`:
+
+```sh
+git status --short
+make plugin-sync
+make plugin
+make plugin-check PLUGIN_ZIP=build/myscoutee-plugin-openai-local-1.6.0.zip
+make plugin-check PLUGIN_ZIP=build/myscoutee-plugin-openai-local-1.6.0.zip SUBMISSION=1
+```
+
+The final command is expected to fail until the open preparation items below
+are resolved. It is a readiness gate, not a failing application regression.
+The local ZIPs use Docker/stdio and cannot be submitted as a public remote plugin.
+Once an actual public endpoint is verified, use the existing `MCP_URL` parameter
+to build `/mcp/private` (OAuth) or `/mcp` (anonymous help). Do not invent a URL or
+use a local validation fixture as the production endpoint.
+
+The validator is deliberately offline. A syntactically valid URL does not prove
+that its content is accessible, an MCP connection works, a publisher is verified
+or that the provider will approve a submission. Do not set `MCPGODEBUG=hintomitempty=1`:
+it would suppress explicit false hints required for review.
+
+## Open items, in dependency order
+
+### 1. Confirm publisher facts and policy coverage
+
+Owner: account holder for facts/attestations; next agent for preparation.
+
+- Confirm the intended verified person/business and portal organization/project.
+  The retained `MyScoutee` brand is not evidence of completed identity verification.
+- Confirm supported country targeting; do not infer it from HU/EN or a domain.
+- Confirm whether the submitted integration involves commerce and what is bought
+  where. Do not infer a declaration from other MyScoutee features.
+- Verify published privacy and terms content covers this MCP integration's actual
+  reads/writes, profile permissions, host sharing, compact Events callbacks,
+  retention and revocation/deletion. Reuse existing policy owners and pages;
+  legal commitments require the owner's confirmation.
+- `https://myscoutee.com/privacy-policy` and `/terms` returned HTTP 200 but only
+  the SPA shell during read-only HTTP inspection. Their actual rendered policy
+  content and coverage are **NOT VERIFIED**, so these URL fields were left absent.
+  Frontend already has these public routes; do not add duplicate legal pages merely
+  because HTTP source inspection cannot render them.
+- `websiteURL` currently uses the verified public GitHub product page. The owner
+  may prefer the marketing domain after its content is verified. Public support
+  uses the existing GitHub Issues page; private data must not be posted there.
+- `https://github.com/fssrepository/myscoutee-mcp` returned unauthenticated 404.
+  Do not change repository visibility. Claude's GitHub-bundle submission path
+  needs reviewer access/public distribution; alternatively use the supported
+  single remote connector path. The public repository's existing identity remains
+  unchanged in source metadata; resolve access before choosing bundle submission.
+
+Write confirmed values into canonical metadata, run `make plugin-sync`, rebuild
+and rerun checks. Unknown `privacyPolicyURL`, `termsOfServiceURL`, countries,
+commerce and demo URL are omitted, not set to fake values or empty declarations.
+
+### 2. Select and qualify the deployment
+
+Owner: deployment operator + next agent.
+
+- Deploy the QA-qualified backend/MCP candidate from the consolidated master.
+  Record source commits, image IDs, configuration and plugin ZIP SHA-256.
+- Confirm real public HTTPS MCP URL, valid certificate, exact OAuth issuer and
+  resource/audience metadata. Configure the existing public-base setting.
+  GitHub Pages is a frontend prototype, not a hosted MCP server.
+- Main MCP is Blocked by default. Enable the selected pack on the dedicated test
+  profiles and clients using the normal saved settings/consent flow. No DB hacks,
+  embedded credentials, arbitrary browser injections or shared publisher identity.
+- Reuse the optional pinned `tools/oauth-client` Inspector for dev checks. It is
+  not shipped in the production server. Follow backend fixture/launcher rules.
+- Run existing `INTEGRATION-ACCESS-001` and `MCP-EVENTS-001` plus the latest shared
+  QA ledger. Test two unrelated users, profile/group separation, all four packs,
+  refresh, revocation and bounded Events delivery. Local source checks are not
+  proof of ChatGPT/Claude interoperability.
+
+### 3. Review fixtures and cases
+
+Owner: QA executor with explicit authorization; account holder for access.
+
+- Use disposable member, Work and operator test profiles. Reuse the existing
+  versioned fixture/harness and normal seed owners. Never provision a shared
+  privileged live-user account just to simplify review.
+- Private P1: current Hungarian help. P2: one draft Standard event. P3: one draft
+  Work campaign. P4: a human-entered two-campaign history including a decimal
+  aggregate (e.g. 8.5). P5: synthetic persisted operator reports (page 0, size 25).
+  Full prompts and exact expectations are in the manifest; use them as authority.
+- Create fresh stable external IDs per fresh test run and record returned IDs.
+  The fixed event date is 10 January 2027; move it forward and rebuild the package
+  if that date is no longer in the future. Do not silently alter a saved review case.
+- Negative cases: personal rating delegation, ballot delegation, privileged
+  administrative/deployment/payment changes. Expected outcome: explanation, no
+  prohibited operation and no fabricated success.
+- Events are protocol methods, not invented model tools: retain the separate
+  subscribe → signed callback → host delivery → unsubscribe checklist. Confirm
+  ChatGPT Work/Cloud support; do not infer Claude Events support from ordinary
+  connector support or a paid plan.
+- Record each case Passed/Failed/Blocked/Not run in QA evidence with actual calls
+  and returned statuses. All cases in this handoff are currently **NOT RUN**.
+- Provide reviewer credentials only in the portal's secure fields. Verify that
+  the reviewer can use the account without your mailbox, MFA approval or private
+  network; preserve that access through review. Do not bypass production auth.
+
+### 4. Record the real demonstration
+
+After successful rehearsal in an intended host, capture: connection/profile,
+Hungarian help, draft event receipt, draft Work campaign receipt, aggregate read,
+operator read on its separate connection, and the three negative boundaries.
+Show real prompts and results long enough to read. If advertising Events, include
+the verified host subscription/delivery/stop sequence as well.
+
+Keep secrets/private messages out of frame. Review playback, then host it at a
+reviewer-accessible URL and verify playback without private access. Put the actual
+URL in `review.demo_recording_url`, sync and rebuild. This script is not a video.
+
+### 5. Final package, portal and release
+
+- Recheck current official requirements; build each intended target/variant and
+  inspect the exact ZIP, including hidden manifests. Run the target's validator
+  where available and the local strict preparation gate. Keep credentials out.
+- OpenAI: verified publisher/organization access, upload draft when authorized,
+  domain challenge, remote OAuth connection, tool scan, secure reviewer access,
+  imported cases/metadata, policy attestations by the authorized account holder.
+  Fix reported findings and rerun the review cases on the saved candidate.
+- Claude: current paid publisher-plan eligibility, remote connector or accessible
+  GitHub bundle, provider scan/review and actual connection tests. A local Claude
+  Code ZIP does not prove directory availability in claude.ai.
+- Submission for review and publishing after approval are distinct operations.
+  No upload, submission or publication has been performed in this task.
+- Record listing IDs/URLs, approved version, hashes, deployment identity and live
+  status; update this handoff and the project task. Keep secrets out of Git.
+
+## Sources checked 2026-10-07
+
+### Dev verification evidence
+
+- OpenAI and Claude 1.6.0 local ZIPs built and passed actual-archive checks.
+- Seven deliberately malformed archives were rejected: stale overlay version,
+  old Docker image, missing logo, placeholder support URL, missing positive cases,
+  unsafe ZIP path and prohibited app binding. Temporary cases were removed.
+- Strict OpenAI submission gate correctly reports six open preparation items:
+  privacy URL, terms URL, actual recording, countries, commerce and remote endpoint.
+- Python syntax and Git whitespace checks passed. Existing Compose MCP image build
+  passed using cached dependencies; only mcp-dev was stopped and then recreated.
+  Image: `19b81b75aed2d7448d712114d230c5baff4486a268a31436c292caf579a2d7b4`.
+- Public metadata inspection after normal MCP initialization confirms all three
+  help tools serialize the three explicit boolean hints. No private tool was
+  invoked and no fixture or user record was changed. Private discovery regression
+  assertions were extended but Go/browser/host/functional suites remain NOT RUN.
+
+### References
+
+- https://developers.openai.com/plugins/deploy/submission
+- https://developers.openai.com/plugins/plugin-guidelines
+- https://developers.openai.com/plugins/build/mcp-events
+- https://claude.com/resources/articles/build-plugins-for-claude
+- https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp
+
+Provider requirements can change. Recheck them at actual submission.

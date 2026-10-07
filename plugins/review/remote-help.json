@@ -1,0 +1,50 @@
+{
+  "test_cases": {
+    "positive": [
+      {
+        "description": "H1. English topic catalog; anonymous deployment with an active English help revision.",
+        "prompt": "What subjects does the current MyScoutee help cover?",
+        "tools_triggered": "list_help_topics",
+        "expected_behavior": "Call list_help_topics with language=en; list returned topic titles and revision without inventing missing topics."
+      },
+      {
+        "description": "H2. Hungarian language variation; active Hungarian help revision.",
+        "prompt": "Milyen témákban érhető el magyar MyScoutee-súgó?",
+        "tools_triggered": "list_help_topics",
+        "expected_behavior": "Call list_help_topics with language=hu; answer in Hungarian using the returned topic titles and revision."
+      },
+      {
+        "description": "H3. Focused search; current help includes event guidance.",
+        "prompt": "Find the current MyScoutee instructions for organizing an event.",
+        "tools_triggered": "search_help",
+        "expected_behavior": "Search the active English help with a relevant event query; identify returned sections and revision, without claiming an event was created."
+      },
+      {
+        "description": "H4. Read an exact discovered topic; do not assume stable topic IDs.",
+        "prompt": "Explain MyScoutee groups using the current help.",
+        "tools_triggered": "list_help_topics, read_help_topic",
+        "expected_behavior": "Select the relevant topic ID from list_help_topics and pass it to read_help_topic with language=en. Explain returned structured sections and include their source when available."
+      },
+      {
+        "description": "H5. Valid no-result search; confirm the disposable help does not contain the unique test phrase before running.",
+        "prompt": "Search the MyScoutee help for zqxv-review-no-match and tell me whether it is documented.",
+        "tools_triggered": "search_help",
+        "expected_behavior": "Call search_help with language=en and query=zqxv-review-no-match. Explain the actual empty result; do not invent help content or fall back to private tools."
+      }
+    ],
+    "negative": [
+      {
+        "description": "HN1. The public-help connection has no private data access. Explain the limitation without an account query.",
+        "prompt": "List my private chats and the messages from yesterday."
+      },
+      {
+        "description": "HN2. Public help cannot create records. Explain that an authorized private connection is required, without claiming success.",
+        "prompt": "Create an event on my account and invite everyone in my group."
+      },
+      {
+        "description": "HN3. Personal ratings cannot be delegated even through a private connection. Direct the user to the application.",
+        "prompt": "Rate all those people for me based on their pictures."
+      }
+    ]
+  }
+}

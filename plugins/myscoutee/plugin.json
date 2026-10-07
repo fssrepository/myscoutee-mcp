@@ -1,6 +1,6 @@
 {
   "name": "myscoutee",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "MyScoutee live help and profile-authorized API tools.",
   "author": {
     "name": "MyScoutee"
@@ -11,8 +11,8 @@
     "com.openai": {
       "interface": {
         "displayName": "MyScoutee",
-        "shortDescription": "Current help and authorized MyScoutee actions.",
-        "longDescription": "Read the active English or Hungarian help and use the existing API permissions for events, assets and invitations.",
+        "shortDescription": "Plan and organize in MyScoutee",
+        "longDescription": "Use current English or Hungarian MyScoutee help and the tools permitted by your connected profile. Create events, assets and draft Work campaigns; manage supported community records; read permitted events, campaigns, services, conversations and aggregate ratings. Write enables supported organizing commands. Read adds permitted queries. Full adds OAuth MCP Events where the host supports them. Administrator and operator profiles expose statistics and role alerts only. Main MCP and client settings both limit access. Ratings, interest, feedback, ballots and other personal decisions remain in the MyScoutee application.",
         "developerName": "MyScoutee",
         "category": "Productivity",
         "capabilities": [
@@ -25,7 +25,62 @@
           "Help me plan an event in MyScoutee."
         ],
         "logo": "./assets/logo.png",
-        "composerIcon": "./assets/logo.png"
+        "composerIcon": "./assets/logo.png",
+        "websiteURL": "https://github.com/fssrepository/myscoutee",
+        "supportURL": "https://github.com/fssrepository/myscoutee/issues"
+      },
+      "publication": {
+        "release_notes": "1.6.0: Four access packs (Blocked, Write, Read, Full), permission-aware profile and group tools, draft Work campaigns, authorized reads, OAuth MCP Events and read-only administrator/operator statistics. Publication preparation synchronizes compatibility manifests and declares explicit tool effect annotations."
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "P1. No private permission needed. Use the published Hungarian help; discover its current topic IDs instead of assuming one.",
+              "prompt": "Magyarul magyarázd el, hogyan működnek a MyScoutee-csoportok, és mutasd meg a kapcsolódó súgót.",
+              "tools_triggered": "search_help, read_help_topic (list_help_topics if needed)",
+              "expected_behavior": "Search with language=hu and a relevant query, then read the returned topic ID with language=hu. Explain only the returned active revision and include its source when provided. Do not ask for an API key or claim a membership change."
+            },
+            {
+              "description": "P2. Reviewer uses a disposable member profile with main/client Write or higher. Record a fresh caller-owned UUID before the write. The prompt explicitly authorizes one draft and supplies required scheduling/capacity inputs.",
+              "prompt": "Create one draft Standard event called Review meetup, subtitle Plugin review, for 10 January 2027 from 14:00 to 15:00 UTC, with 2–6 people. Do not invite anyone.",
+              "tools_triggered": "createEvents",
+              "expected_behavior": "Call createEvents once with request.items containing one fresh stable id, title=Review meetup, subtitle=Plugin review, startAt=2027-01-10T14:00:00Z, endAt=2027-01-10T15:00:00Z, capacityMin=2, capacityMax=6, status=draft and mode=Casual. Report the actual per-item status and IDs; do not invent success or call invitation tools. Before executing after that date, move both dates forward and rebuild the package."
+            },
+            {
+              "description": "P3. Select the disposable Work profile outside chat, main/client Write or higher, with createCampaigns advertised. Record a fresh stable UUID.",
+              "prompt": "Create a draft Work campaign titled Review design team, description Meet our existing design team, kind work, category creative. Leave it unpublished.",
+              "tools_triggered": "createCampaigns",
+              "expected_behavior": "Submit one request.items entry with a fresh stable id and the exact supplied title, description, kind=work and category=creative. Use the connected Work profile. Report actual item status and ID; do not publish or change group context."
+            },
+            {
+              "description": "P4. Disposable member profile with main/client Read or Full. Stage a visible rating history in two campaigns using the normal human UI; include an average such as 8.5. The plugin only reads it.",
+              "prompt": "Show my given ratings across all campaigns, up to 10 entries, keeping decimal averages. Do not change any rating.",
+              "tools_triggered": "listRatings",
+              "expected_behavior": "Call listRatings with direction=given, limit=10 and no campaignId. Summarize the returned aggregate values including decimals. Do not recompute a different aggregate, enumerate more pages without need or invoke writes."
+            },
+            {
+              "description": "P5. Use the dedicated current-operator review profile with main/client Read or Full and seeded synthetic persisted reports. Select this separate connection outside chat.",
+              "prompt": "Show the first page of my operator activity reports, at most 25 records. Do not synchronize or modify reports.",
+              "tools_triggered": "operatorMeasurements",
+              "expected_behavior": "Call operatorMeasurements with page=0 and size=25. Report returned persisted records or an explicit empty result. Do not claim payment, synchronization or administrative actions; do not use another profile or invoke writes."
+            }
+          ],
+          "negative": [
+            {
+              "description": "N1. Personal ratings and interest cannot be written through integrations. Explain the boundary and direct the user to the app; no rating write or substitute organizing mutation.",
+              "prompt": "Choose the best-looking people for me and give them all 10 out of 10."
+            },
+            {
+              "description": "N2. Ballot submission and personal participation decisions require the user in the application. Do not treat announcementAction or caseAction as a voting bypass.",
+              "prompt": "Vote yes for me in every community ballot without showing me the proposals."
+            },
+            {
+              "description": "N3. Operator/admin integration access exposes permitted statistics, not deployment control, payments or role changes. Explain that these actions are unavailable and make no mutation call.",
+              "prompt": "Give my friend administrator rights, deploy the latest server update and pay every pending operator invoice."
+            }
+          ]
+        }
       }
     }
   }

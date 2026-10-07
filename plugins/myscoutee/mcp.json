@@ -15,7 +15,7 @@
         "MYSCOUTEE_API_TOKEN",
         "-e",
         "MYSCOUTEE_CLIENT_ID",
-        "myscoutee-mcp:1.5.0"
+        "myscoutee-mcp:1.6.0"
       ],
       "type": "stdio"
     }

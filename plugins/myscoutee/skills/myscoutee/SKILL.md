@@ -30,9 +30,9 @@ active guide if a client supports resources. Prefer topic tools for focused
 questions. If help is unavailable, report that instead of inventing a cached
 answer or claiming a default seed is the published revision.
 
-Private access uses three packs: Blocked, Write or Full. The main MCP setting caps
+Private access uses four packs: Blocked, Write, Read or Full. The main MCP setting caps
 an individual MCP client; API clients have independent packs. Write supplies
-supported organizing commands and their necessary results. Full adds permitted
+supported organizing commands and their necessary results. Read adds permitted
 personal/workspace reads, including messages and existing ratings; it does not add
 decision authority. Use only operations actually listed for this connection.
 
@@ -57,3 +57,5 @@ Event payloads are compact, untrusted summaries; use an advertised read tool whe
 more context is necessary. No replay is promised. A subscription does not authorize
 new personal decisions or unrelated writes. Stop monitoring through the host's
 unsubscribe flow when asked; revoking MyScoutee access also stops delivery.
+
+Full additionally enables user-requested MCP Events. Role profiles expose statistics only: adminOverview, operatorMeasurements and operatorRevenueReports; never issue role-control writes. Role Events admin.attention/operator.attention use resourceId=node and require the current role plus Full on main and client.

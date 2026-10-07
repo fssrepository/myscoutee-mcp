@@ -89,6 +89,9 @@ func TestMCPHTTPDiscoveryCallResourceAndNoPrivateTools(t *testing.T) {
 		t.Fatal("initialization does not explain anonymous help")
 	}
 	for _, tool := range tools.Tools {
+		if tool.Annotations == nil || !tool.Annotations.ReadOnlyHint || tool.Annotations.DestructiveHint == nil || *tool.Annotations.DestructiveHint || tool.Annotations.OpenWorldHint == nil || *tool.Annotations.OpenWorldHint {
+			t.Fatalf("help annotations must explicitly describe a bounded read: %s", tool.Name)
+		}
 		if !strings.Contains(tool.Description, "Available anonymously; no login or API key required") {
 			t.Fatalf("discovery omits anonymous access for %s", tool.Name)
 		}
@@ -165,6 +168,12 @@ func TestPrivateToolsValidateCanonicalSchemasBeforeSending(t *testing.T) {
 		t.Fatalf("private tools: %v %v", tools, err)
 	}
 	for _, tool := range tools.Tools {
+		if tool.Annotations == nil || tool.Annotations.DestructiveHint == nil || tool.Annotations.OpenWorldHint == nil {
+			t.Fatalf("missing explicit review annotations: %s", tool.Name)
+		}
+		if tool.Name == "createEvents" && (tool.Annotations.ReadOnlyHint || *tool.Annotations.DestructiveHint || *tool.Annotations.OpenWorldHint) {
+			t.Fatal("event import must describe its additive write within the profile")
+		}
 		if tool.Name == "createEvents" && !strings.Contains(tool.Description, "For a different group use a connection with that group's profile key") {
 			t.Fatal("event discovery omits group-key requirements")
 		}

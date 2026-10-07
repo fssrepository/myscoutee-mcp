@@ -9,6 +9,9 @@ parser.add_argument('--check',action='store_true')
 args=parser.parse_args()
 source=yaml.safe_load((root.parent/'myscoutee-client/openapi.yaml').read_text())
 allowed={
+ 'adminOverview',
+ 'operatorMeasurements',
+ 'operatorRevenueReports',
  'announcementAction',
  'announcementDetails',
  'assetDetails',

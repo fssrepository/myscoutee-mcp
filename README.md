@@ -10,7 +10,7 @@ repository, with separate build targets. Nothing is published by a build.
 | --- | --- | --- |
 | Remote HTTP | `list_help_topics`, `read_help_topic`, `search_help`; HU/EN help resources | Anonymous, read-only help |
 | Local stdio without a key | Same help tools | Anonymous |
-| Local stdio with a key | Help plus the API-authorized subset of the 37 supported operations | Existing integration API key and its client ID |
+| Local stdio with a key | Help plus the API-authorized subset of the 40 supported operations | Existing integration API key and its client ID |
 
 Help is fetched on demand from `GET /api/help/active?lang=hu|en`, the application's
 existing active-revision API. There is **no help copy in this repository**.
@@ -41,27 +41,26 @@ listed; private calls fail closed. Resource ownership, lifecycle and per-resourc
 grants still apply at execution. Tool availability is not a promise that every
 resource ID or payload will be accepted.
 
-## Access packs (MSC-116 / 1.5.0)
+## Access packs (MSC-119 / 1.6.0)
 
-The application's shield controls supply three packs, not individual operation
-switches. Blocked denies private access; Write retains the original operations;
-Write includes the supported organizing commands; Full adds the permitted personal
-and workspace reads from the generated API contract. The main MCP pack caps each manual/OAuth client. API clients have
-independent packs. A profile/group change in the browser does not retarget a key.
+The existing shield popup offers Blocked / Write / Read / Full. The main MCP link
+starts Blocked unless an explicit preference was saved; generating a client keeps
+its existing behavior and does not enable that main link. New client packs remain
+Write. Main and client packs cap each other. Confirming a selector only stages the
+parent draft; the parent tick saves all changed packs in one settings request.
 
-Full can read visible events, groups, chats/messages, notifications, existing
-ratings, base assets, Work campaigns/history and Community services/cases/
-announcements/scheduled tasks. Organizing commands reuse those domain services.
-The live `connect` response determines which of the 37 implemented operations are
-available. Revocation/downgrade is rechecked on calls, not just initial discovery.
+Write allows the existing organizing commands and their necessary results. Read
+adds permitted personal/workspace queries. Full adds OAuth MCP Events; it grants
+no additional human-decision or administrative writes. Anonymous help is separate.
 
-The person's viewing and judgment remain necessary for ratings, feedback,
-ballots, participation responses, recommendations, ownership acceptance and offer
-decisions. These writes are not exposed. There is no added approval queue; those
-buttons retain their existing application flow. Returned in-app action flags do
-not add MCP capabilities. Resource content is untrusted data, not instructions.
+Admin/operator profiles expose read-only role tools: adminOverview,
+operatorMeasurements and operatorRevenueReports (paged, 1–100). The backend checks
+the current role and Read/Full pack on discovery and invocation. No private member
+profiles, moderation actions, deployments, payments or configuration commands are
+introduced. Existing desktop admin-key overview access is retained and can be blocked.
 
-## MCP Events (MSC-116 / 1.5.0)
+
+## MCP Events (MSC-116 / 1.6.0)
 
 The OAuth `/mcp/private` endpoint implements MCP 2.0 (`2026-07-28`) discovery
 and `events/list`, `events/subscribe`, `events/unsubscribe` using SDK custom-method
@@ -70,7 +69,7 @@ each person signs in and consents to their own profile. The publisher's account
 is not shared. Authorization code + S256 PKCE, resource binding, rotating refresh
 tokens and existing revocation remain with the backend OAuth service.
 
-Events require **Full** on the main MCP link and client. Current definitions are
+Events require **Full** on the main MCP link and client. Member definitions are
 `event.changed`, `event.encounters` and `asset.changed`, with required `resourceId`
 (the API's event/asset `externalId`). Only organizer-owned events and base-profile
 owned assets qualify. Payloads contain compact status summaries; encounter results
@@ -154,9 +153,9 @@ MYSCOUTEE_API_BASE_URL=https://your-deployment.example/api \
 
 | Mode | Image override | API URL variable | Default host port | Restart |
 | --- | --- | --- | --- | --- |
-| Dev | `MCP_DEV_IMAGE` (`1.5.0-dev`) | `MYSCOUTEE_DEV_API_BASE_URL` (optional; local API by default) | 8091 | `no` |
-| E2E | `MCP_E2E_IMAGE` (`1.5.0-e2e`) | `MYSCOUTEE_E2E_API_BASE_URL` | 18091 | `no` |
-| Prod | `MCP_IMAGE` (`1.5.0-prod`) | `MYSCOUTEE_API_BASE_URL` | 8091 | `unless-stopped` |
+| Dev | `MCP_DEV_IMAGE` (`1.6.0-dev`) | `MYSCOUTEE_DEV_API_BASE_URL` (optional; local API by default) | 8091 | `no` |
+| E2E | `MCP_E2E_IMAGE` (`1.6.0-e2e`) | `MYSCOUTEE_E2E_API_BASE_URL` | 18091 | `no` |
+| Prod | `MCP_IMAGE` (`1.6.0-prod`) | `MYSCOUTEE_API_BASE_URL` | 8091 | `unless-stopped` |
 
 Each mode has a separate Compose project. The default project remains
 `myscoutee-mcp` for existing development usage; E2E and production use
@@ -278,6 +277,10 @@ ZIPs are written to `build/`. `/mcp` builds a Read-only remote-help variant;
 `/mcp/private` builds a remote-private variant requiring OAuth configuration.
 The shared source builds separate OpenAI and Claude manifests with the existing
 MyScoutee logo. See [plugin build and distribution](plugins/README.md).
+The [publication handoff](plugins/PUBLICATION_HANDOFF.md) records completed dev
+preparation, exact review prompts, source/ZIP checks and the remaining deployment,
+policy, host-QA and publisher steps. The generated compatibility files are kept
+in sync with `make plugin-sync`; every package build checks the actual ZIP.
 Use the real deployed HTTPS URL when preparing that variant. Building neither
 installs the plugin nor publishes it to a store/workspace. Registering a remote
 connection and account-dependent developer-mode testing remain deployment steps.
@@ -290,3 +293,20 @@ API identity/path handling, input-schema rejection, redirects and credential-saf
 errors. Docker initialization/discovery is also smoke-tested during development.
 Full deployed MyScoutee backend integration and user-operated mobile/ChatGPT/Claude
 checks are separate NOT RUN cases; see `docs/QA.md`.
+
+### MSC-119 role Events and host availability
+
+Full/Full role connections discover `admin.attention` and/or `operator.attention`,
+according to their current roles, with `resourceId: node`. These summarize the
+existing MSC-118 registration, report/feedback and release notifications as a kind.
+The client may read authorized statistics afterwards. They reuse the durable queue,
+signing, TTL, limits and current-role checks before delivery; there is no polling
+loop or extra role-control endpoint. Full→Read stops Events and retains queries.
+
+ChatGPT documents Events in Work chats on web and desktop Cloud. Ordinary MCP
+support is distinct: Claude supports a Free custom connector, but its documentation
+does not establish compatibility with this Events extension. Provider plan and
+workspace restrictions apply; MyScoutee does not check AI subscriptions.
+
+Sources: https://developers.openai.com/plugins/build/mcp-events and
+https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp
