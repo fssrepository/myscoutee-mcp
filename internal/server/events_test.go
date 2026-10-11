@@ -63,10 +63,24 @@ func TestEventsUseMCP2DiscoveryAndKeepOAuthUsersIsolated(t *testing.T) {
 		t.Fatal(err)
 	}
 	call := func(path, token, method, params string) *httptest.ResponseRecorder {
-		request := httptest.NewRequest("POST", path, strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"`+method+`","params":`+params+`}`))
+		var body map[string]any
+		if err := json.Unmarshal([]byte(params), &body); err != nil {
+			t.Fatal(err)
+		}
+		body["_meta"] = map[string]any{
+			"io.modelcontextprotocol/protocolVersion":    "2026-07-28",
+			"io.modelcontextprotocol/clientInfo":         map[string]any{"name": "events-test", "version": "1"},
+			"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+		}
+		encoded, err := json.Marshal(body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		request := httptest.NewRequest("POST", path, strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"`+method+`","params":`+string(encoded)+`}`))
 		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Accept", "application/json, text/event-stream")
 		request.Header.Set("MCP-Protocol-Version", "2026-07-28")
+		request.Header.Set("Mcp-Method", method)
 		if token != "" {
 			request.Header.Set("Authorization", "Bearer "+token)
 		}
@@ -79,7 +93,7 @@ func TestEventsUseMCP2DiscoveryAndKeepOAuthUsersIsolated(t *testing.T) {
 		t.Fatal("Events capability missing", result.Code, result.Body.String())
 	}
 	anonymous := call("/mcp", "", "server/discover", `{}`)
-	if strings.Contains(anonymous.Body.String(), `"events":`) {
+	if anonymous.Code != 200 || strings.Contains(anonymous.Body.String(), `"events":`) {
 		t.Fatal("anonymous Events advertised")
 	}
 	for _, token := range []string{tokenA, tokenB, tokenA} {

@@ -106,6 +106,11 @@ index initializer. API `/watch` remains its separate, compatible callback protoc
 Runtime ChatGPT callback/lifecycle QA and load testing are **NOT RUN**; see the
 backend's `guides/qa/checklists/api/MCP-EVENTS-001.md` and this repository's QA notes.
 
+Product identity/version/help guidance live in `internal/server/product.go`;
+`internal/api/contract.json` is the generated supported API catalog. A derivative
+application selects those build inputs while reusing the same transport and live
+capability checks. Neither input grants access: the backend remains authoritative.
+
 ## Build and test
 
 Requires Go 1.26 and Docker for an image build:

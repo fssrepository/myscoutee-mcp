@@ -80,3 +80,16 @@ expiry, resource authorization/revocation, SSRF/DNS rebinding, bounded retries,
 virtual-thread concurrency, callback rate throttling, queue overflow and ChatGPT
 Work/Cloud receipt. Go HTTP adapter and Java protocol regression sources were added;
 source compilation does not mark execution or live plugin interoperability PASS.
+
+## Template reuse checkpoint (2026-10-11)
+
+Product name/title/version/help guidance moved unchanged to `product.go`; the
+transport and capability checks are unchanged. All 12 top-level Go tests pass
+with `go test -race ./...` (plus native subcases). The raw MCP 2.0 Events test
+previously omitted the required per-request metadata and `Mcp-Method` header.
+Its request now matches the pinned SDK/specification, and anonymous discovery
+must return 200 before the test can claim Events are absent. No server protocol
+validation was relaxed. See the [protocol discovery request](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/specification/2026-07-28/server/discover.mdx).
+
+This source-only checkpoint does not qualify an external provider conversation
+or deployed callback delivery.
