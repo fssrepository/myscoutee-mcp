@@ -2,6 +2,8 @@
 """Package shared plugin sources for OpenAI or Claude. Never installs or publishes."""
 import argparse
 import json
+import os
+import re
 import shutil
 import zipfile
 from copy import deepcopy
@@ -61,6 +63,21 @@ def main():
     for name, expected in generated.items():
         if json.loads((source / name).read_text()) != expected:
             parser.error(f"{name} differs from portable sources; run plugins/build.py --sync")
+    # Reuse the application's release input; keep tracked authoring sources intact.
+    source_version = manifest["version"]
+    version = os.environ.get("MYSCOUTEE_VERSION", source_version)
+    if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-qa\.[1-9][0-9]*)?", version):
+        parser.error("MYSCOUTEE_VERSION must be a release version such as 1.4.1 or 1.4.2-qa.1")
+    manifest["version"] = version
+    publication = manifest["extensions"]["com.openai"].get("publication", {})
+    notes = publication.get("release_notes", "")
+    if notes.startswith(source_version + ":"):
+        publication["release_notes"] = version + notes[len(source_version):]
+    for server in mcp["mcpServers"].values():
+        if "command" in server:
+            server["args"] = [f"myscoutee-mcp:{version}" if arg == f"myscoutee-mcp:{source_version}" else arg
+                              for arg in server.get("args", [])]
+    generated = compatibility(manifest, mcp)
     variant = ("remote-private" if url.path.rstrip("/").endswith("/mcp/private") else "remote-help") if args.url else "local"
     targets = ("openai", "claude") if args.target == "all" else (args.target,)
     for target in targets:
@@ -71,16 +88,15 @@ def main():
         shutil.copytree(source / "skills", output / "skills", symlinks=True)
         shutil.copytree(source / "assets", output / "assets", symlinks=True)
         if target == "openai":
-            for name in ("plugin.json", "mcp.json", ".mcp.json"):
-                shutil.copyfile(source / name, output / name)
-            shutil.copytree(source / ".codex-plugin", output / ".codex-plugin", symlinks=True)
+            for name, data in {"plugin.json": manifest, "mcp.json": mcp, **generated}.items():
+                write_json(output / name, data)
         else:
             claude = {key: manifest[key] for key in
                       ("name", "version", "description", "author", "repository")}
             if variant == "remote-help":
                 claude["description"] = "Current MyScoutee help in English and Hungarian."
             write_json(output / ".claude-plugin/plugin.json", claude)
-            shutil.copyfile(source / ".mcp.json", output / ".mcp.json")
+            write_json(output / ".mcp.json", generated[".mcp.json"])
 
         if args.url:
             write_json(output / ".mcp.json", {"mcpServers": {

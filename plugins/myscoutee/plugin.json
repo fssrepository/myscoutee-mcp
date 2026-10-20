@@ -1,6 +1,6 @@
 {
   "name": "myscoutee",
-  "version": "1.6.0",
+  "version": "1.4.1",
   "description": "MyScoutee live help and profile-authorized API tools.",
   "author": {
     "name": "MyScoutee"
@@ -30,7 +30,7 @@
         "supportURL": "https://github.com/fssrepository/myscoutee/issues"
       },
       "publication": {
-        "release_notes": "1.6.0: Four access packs (Blocked, Write, Read, Full), permission-aware profile and group tools, draft Work campaigns, authorized reads, OAuth MCP Events and read-only administrator/operator statistics. Publication preparation synchronizes compatibility manifests and declares explicit tool effect annotations."
+        "release_notes": "1.4.1: Four access packs (Blocked, Write, Read, Full), permission-aware profile and group tools, draft Work campaigns, authorized reads, OAuth MCP Events and read-only administrator/operator statistics. Publication preparation synchronizes compatibility manifests and declares explicit tool effect annotations."
       },
       "review": {
         "test_cases": {

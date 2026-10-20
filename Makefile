@@ -1,12 +1,14 @@
 .PHONY: test build image plugin plugin-sync plugin-check contract-check oauth-client
 GO ?= go
+MYSCOUTEE_VERSION ?= $(shell python3 -c 'import json; print(json.load(open("plugins/myscoutee/plugin.json"))["version"])')
+export MYSCOUTEE_VERSION
 
 test:
 	$(GO) test -race ./...
 build:
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags='-s -w' -o build/myscoutee-mcp ./cmd/myscoutee-mcp
 image:
-	docker build -t myscoutee-mcp:1.6.0 .
+	docker build -t myscoutee-mcp:$(MYSCOUTEE_VERSION) .
 plugin:
 	python3 plugins/build.py --target $(or $(PLUGIN_TARGET),all) $(if $(MCP_URL),--url '$(MCP_URL)',)
 plugin-sync:
