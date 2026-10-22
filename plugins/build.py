@@ -28,6 +28,19 @@ def compatibility(manifest, mcp):
             ".mcp.json": {"mcpServers": deepcopy(mcp["mcpServers"])}}
 
 
+def shared_skill(root):
+    for parent in root.parents:
+        checkout = parent / "myscoutee-skills"
+        if checkout.exists():
+            skill = checkout / ".agents/skills/myscoutee"
+            if not (skill / "SKILL.md").is_file():
+                raise FileNotFoundError(f"Missing shared skill: {skill / 'SKILL.md'}")
+            return skill
+    raise FileNotFoundError(
+        "Clone https://github.com/fssrepository/myscoutee-skills.git "
+        "beside the MCP repository or its parent application repository")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", choices=("all", "openai", "claude"), default="all")
@@ -80,12 +93,16 @@ def main():
     generated = compatibility(manifest, mcp)
     variant = ("remote-private" if url.path.rstrip("/").endswith("/mcp/private") else "remote-help") if args.url else "local"
     targets = ("openai", "claude") if args.target == "all" else (args.target,)
+    try:
+        skill_source = shared_skill(root)
+    except FileNotFoundError as error:
+        parser.error(str(error))
     for target in targets:
         output = root / "build/plugins" / target / variant / "myscoutee"
         if output.exists():
             shutil.rmtree(output)
         output.mkdir(parents=True)
-        shutil.copytree(source / "skills", output / "skills", symlinks=True)
+        shutil.copytree(skill_source, output / "skills/myscoutee", symlinks=True)
         shutil.copytree(source / "assets", output / "assets", symlinks=True)
         if target == "openai":
             for name, data in {"plugin.json": manifest, "mcp.json": mcp, **generated}.items():

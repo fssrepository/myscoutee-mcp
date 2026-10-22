@@ -1,8 +1,10 @@
 # Plugin packages (unpublished)
 
-`myscoutee/` is the shared skill, metadata and MCP configuration. `build.py`
-creates separate target packages without duplicating the MCP implementation or
-help content. No command here installs, publishes or changes a marketplace.
+`myscoutee/` owns plugin metadata and MCP configuration. The skill's only source is
+`myscoutee-skills/.agents/skills/myscoutee/SKILL.md`; keep that checkout beside this
+repository or its parent application repository (see `AGENTS.md`). `build.py`
+includes it in each target package without duplicating the authoring source or
+MCP implementation. No command here installs, publishes or changes a marketplace.
 
 Publication continuation: [PUBLICATION_HANDOFF.md](PUBLICATION_HANDOFF.md).
 The current archives are development artifacts, **not submission-ready**.
