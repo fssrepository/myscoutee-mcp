@@ -47,23 +47,26 @@ HTTP refuses process-wide personal keys. Local stdio may use
 `MYSCOUTEE_API_TOKEN` and `MYSCOUTEE_CLIENT_ID`, configured outside chat.
 `MYSCOUTEE_PUBLIC_API_BASE_URL` supplies the public OAuth metadata origin.
 
-The shared Dockerfile takes the two files through a named build context and
-packages them with the common binary. No consuming repository copies Go sources
-or maintains its own Dockerfile.
+The released image contains the common binary and CA certificates, without any
+application configuration: `ghcr.io/fssrepository/myscoutee-mcp:1.4.6` (Linux amd64).
+The [v1.4.6 release](https://github.com/fssrepository/myscoutee-mcp/releases/tag/v1.4.6)
+records its immutable digest and source commit. Git tags `vX.Y.Z` run the Go race
+tests before publishing the image and GitHub Release.
 
 ```sh
-docker build --build-context mcp-config=/absolute/path/to/application/config/mcp \
-  -t application-mcp:version .
+docker run --rm --read-only \
+  -v /absolute/path/to/application/config/mcp:/etc/mcp:ro \
+  ghcr.io/fssrepository/myscoutee-mcp:1.4.6
 ```
 
-Compose consumers set `build.context` to their pinned `mcp` submodule and
-`build.additional_contexts.mcp-config` to their own `config/mcp` directory.
-The image sets `MCP_CONFIG_DIR=/etc/mcp`; installed and KVM deployments need no
-source/config mounts. The image contains only the binary, CA certificates and the
-two selected JSON files, and runs unprivileged.
+Applications pin the released image by digest and package only their two JSON
+files in a thin derived image for Compose, installed and KVM deployments. They
+need no Go source checkout or Go compiler. The image sets
+`MCP_CONFIG_DIR=/etc/mcp` and runs unprivileged. Source changes belong in this
+repository.
 
 The standalone `compose.dev.yaml`, `compose.e2e.yaml` and `compose.prod.yaml`
-likewise require `MCP_CONFIG_DIR` when building. Use the same `-f` selection for
+likewise mount `MCP_CONFIG_DIR` read-only. Use the same `-f` selection for
 later lifecycle commands. These files are not launched by consuming projects.
 
 ## Update an application's contract

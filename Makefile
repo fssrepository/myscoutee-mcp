@@ -11,8 +11,7 @@ test:
 build:
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags='-s -w' -o build/myscoutee-mcp ./cmd/myscoutee-mcp
 image:
-	test -n "$(MCP_CONFIG_DIR)" || { echo "Set MCP_CONFIG_DIR to the application config/mcp directory" >&2; exit 1; }
-	docker build --build-context "mcp-config=$(MCP_CONFIG_DIR)" -t "$(IMAGE)" .
+	docker build -t "$(IMAGE)" .
 plugin:
 	python3 plugins/build.py --target $(or $(PLUGIN_TARGET),all) $(if $(MCP_URL),--url '$(MCP_URL)',)
 plugin-sync:

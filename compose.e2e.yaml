@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: mcp
-    image: ${MCP_E2E_IMAGE:-myscoutee-mcp:1.6.0-e2e}
+    image: ${MCP_E2E_IMAGE:-ghcr.io/fssrepository/myscoutee-mcp:1.4.6}
     restart: "no"
     environment:
       MYSCOUTEE_API_BASE_URL: ${MYSCOUTEE_E2E_API_BASE_URL:?Set the e2e API base URL ending in /api}
