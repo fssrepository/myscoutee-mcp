@@ -27,14 +27,11 @@ type SearchInput struct {
 
 // toolAnnotations describes effects, never authorization. All tools operate in
 // this deployment's bounded catalog under the backend-authorized profile.
-func toolAnnotations(method, name string) *mcp.ToolAnnotations {
+func toolAnnotations(method string, destructiveHint *bool) *mcp.ToolAnnotations {
 	readOnly := method == http.MethodGet
 	destructive := !readOnly
-	switch name {
-	case "createAssets", "createEvents", "createCampaigns":
-		// Imports are additive: existing external IDs return receipts without
-		// overwriting records. Other writes may replace or revoke existing state.
-		destructive = false
+	if destructiveHint != nil {
+		destructive = *destructiveHint
 	}
 	openWorld := false
 	return &mcp.ToolAnnotations{
@@ -43,10 +40,10 @@ func toolAnnotations(method, name string) *mcp.ToolAnnotations {
 	}
 }
 
-func New(client *api.Client, private bool) *mcp.Server {
-	s := mcp.NewServer(&mcp.Implementation{Name: productName, Version: productVersion}, &mcp.ServerOptions{Instructions: Instructions})
-	readonly := toolAnnotations("GET", "")
-	mcp.AddTool(s, &mcp.Tool{Name: "list_help_topics", Description: "List the topics of the active " + productTitle + " help with summaries and revision. Available anonymously; no login or API key required. Use before product guidance.", Annotations: readonly},
+func New(client *api.Client, private bool, config Config) *mcp.Server {
+	s := mcp.NewServer(&mcp.Implementation{Name: config.Name, Version: config.Version}, &mcp.ServerOptions{Instructions: config.Instructions})
+	readonly := toolAnnotations("GET", nil)
+	mcp.AddTool(s, &mcp.Tool{Name: "list_help_topics", Description: "List the topics of the active " + config.Title + " help with summaries and revision. Available anonymously; no login or API key required. Use before product guidance.", Annotations: readonly},
 		func(ctx context.Context, _ *mcp.CallToolRequest, in LanguageInput) (*mcp.CallToolResult, Help, error) {
 			out, err := ReadHelp(ctx, client, in.Language, "", "", false)
 			return nil, out, err
@@ -68,8 +65,8 @@ func New(client *api.Client, private bool) *mcp.Server {
 			return nil, out, err
 		})
 	for _, lang := range []string{"en", "hu"} {
-		uri := helpResourcePrefix + lang
-		s.AddResource(&mcp.Resource{URI: uri, Name: "help-" + lang, Title: productTitle + " help (" + lang + ")", Description: "Current published help; same source as the application. Available anonymously; no login or API key required.", MIMEType: "application/json"},
+		uri := config.HelpResourcePrefix + lang
+		s.AddResource(&mcp.Resource{URI: uri, Name: "help-" + lang, Title: config.Title + " help (" + lang + ")", Description: "Current published help; same source as the application. Available anonymously; no login or API key required.", MIMEType: "application/json"},
 			func(ctx context.Context, _ *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
 				out, err := ReadHelp(ctx, client, lang, "", "", true)
 				if err != nil {
@@ -121,19 +118,12 @@ func New(client *api.Client, private bool) *mcp.Server {
 				return listed, nil
 			}
 		})
-		for _, op := range api.Operations() {
+		for _, op := range config.Operations {
 			description := op.Description + ". Requires a configured personal API key or approved MCP connection; the backend enforces profile, group and ownership permissions. Credentials cannot be changed through tool arguments."
-			switch op.Name {
-			case "createEvents":
-				description += " Creates events and imported participants in the key's issuing profile/group. For a different group use a connection with that group's profile key; a prompt or app group switch cannot retarget this key. Check the API-authorized connection context below before creating events."
-			case "createCampaigns":
-				description += " Creates draft campaigns in the key's issuing Work profile/group. For a different group use a connection with that group's profile key; a prompt or app group switch cannot retarget this key. Read or Full access may expose campaignDetails; Write and higher packs may expose updateCampaign and campaignAction; otherwise publish or edit drafts in the application campaign editor."
-			case "createAssets":
-				description += " Requires a base-profile key; a group-profile key cannot create assets."
-			case "inviteGroupParticipants":
-				description += " The token owner must administer the target group. The groupId identifies the invite destination; it does not change the authenticated profile."
+			if op.Guidance != "" {
+				description += " " + op.Guidance
 			}
-			mcp.AddTool(s, &mcp.Tool{Name: op.Name, Description: description, InputSchema: op.Schema, Annotations: toolAnnotations(op.Method, op.Name)},
+			mcp.AddTool(s, &mcp.Tool{Name: op.Name, Description: description, InputSchema: op.Schema, Annotations: toolAnnotations(op.Method, op.DestructiveHint)},
 				func(ctx context.Context, _ *mcp.CallToolRequest, args map[string]any) (*mcp.CallToolResult, any, error) {
 					connection, err := client.Connection(ctx)
 					if err != nil {
@@ -142,10 +132,10 @@ func New(client *api.Client, private bool) *mcp.Server {
 					if !connection.Allows(op.Name) {
 						return nil, nil, errors.New("operation is not available for this connection; refresh discovery or select an authorized connection")
 					}
-					if op.Name == "inviteGroupParticipants" {
+					if op.AuthorizedGroupArgument != "" {
 						allowed := false
 						for _, group := range connection.InviteGroups {
-							if group.ID == fmt.Sprint(args["groupId"]) {
+							if group.ID == fmt.Sprint(args[op.AuthorizedGroupArgument]) {
 								allowed = true
 								break
 							}
@@ -164,11 +154,11 @@ func New(client *api.Client, private bool) *mcp.Server {
 
 // Public help and personal OAuth use separate resource URLs. HTTP never inherits
 // a process-wide key; each private request is authenticated by the existing API.
-func PublicHandler(client *api.Client) (http.Handler, error) {
+func PublicHandler(client *api.Client, config Config) (http.Handler, error) {
 	if client.Token != "" {
 		return nil, errors.New("HTTP help cannot use personal API credentials")
 	}
-	server := New(client, false)
+	server := New(client, false, config)
 	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
 	mux := http.NewServeMux()
 	mux.Handle("/mcp", http.MaxBytesHandler(handler, 1024*1024))
@@ -185,7 +175,7 @@ func PublicHandler(client *api.Client) (http.Handler, error) {
 	mux.Handle("/mcp/private", http.MaxBytesHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		challenge := func() {
-			w.Header().Set("WWW-Authenticate", `Bearer resource_metadata="`+metadata+`", scope="myscoutee:api"`)
+			w.Header().Set("WWW-Authenticate", `Bearer resource_metadata="`+metadata+`", scope="`+config.AuthorizationScope+`"`)
 			http.Error(w, "MCP authorization required", http.StatusUnauthorized)
 		}
 		values := r.Header.Values("Authorization")
@@ -205,12 +195,12 @@ func PublicHandler(client *api.Client) (http.Handler, error) {
 			if errors.As(err, &status) && (status.Status == 401 || status.Status == 403) {
 				challenge()
 			} else {
-				http.Error(w, "MyScoutee authorization service unavailable", http.StatusServiceUnavailable)
+				http.Error(w, "Application authorization service unavailable", http.StatusServiceUnavailable)
 			}
 			return
 		}
 		ctx := personal.WithConnection(r.Context(), connection)
-		server := New(personal, true)
+		server := New(personal, true, config)
 		remote := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
 		remote.ServeHTTP(privateResponse{w}, r.WithContext(ctx))
 	}), 1024*1024))

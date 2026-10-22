@@ -68,7 +68,7 @@ func TestHelpUsesActiveRevisionAndSanitizedStructuredSections(t *testing.T) {
 }
 func TestMCPHTTPDiscoveryCallResourceAndNoPrivateTools(t *testing.T) {
 	client, _ := fixture(t)
-	handler, err := PublicHandler(client)
+	handler, err := PublicHandler(client, testConfig(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func TestMCPHTTPDiscoveryCallResourceAndNoPrivateTools(t *testing.T) {
 	if !strings.Contains(string(raw), "revisionId") || strings.Contains(string(raw), "must not appear") {
 		t.Fatalf("bad result %s", raw)
 	}
-	res, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: "myscoutee://help/en"})
+	res, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: "test://help/en"})
 	if err != nil || len(res.Contents) != 1 || !strings.Contains(res.Contents[0].Text, "Global discovery.") {
 		t.Fatalf("resource: %+v %v", res, err)
 	}
@@ -122,7 +122,7 @@ func TestMCPHTTPDiscoveryCallResourceAndNoPrivateTools(t *testing.T) {
 		t.Fatal("private operation exposed")
 	}
 	client.Token = "private"
-	if _, err = PublicHandler(client); err == nil {
+	if _, err = PublicHandler(client, testConfig(t)); err == nil {
 		t.Fatal("HTTP must reject shared API identity")
 	}
 }
@@ -153,7 +153,7 @@ func TestPrivateToolsValidateCanonicalSchemasBeforeSending(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	a, b := mcp.NewInMemoryTransports()
-	serverSession, err := New(client, true).Connect(ctx, a, nil)
+	serverSession, err := New(client, true, testConfig(t)).Connect(ctx, a, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func TestPrivateToolsRespectAPIDenialsAndCannotOverrideIdentity(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	a, b := mcp.NewInMemoryTransports()
-	serverSession, err := New(client, true).Connect(ctx, a, nil)
+	serverSession, err := New(client, true, testConfig(t)).Connect(ctx, a, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -291,7 +291,7 @@ func TestDiscoveryUsesLiveAPICapabilitiesAndFailsClosed(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	a, b := mcp.NewInMemoryTransports()
-	ss, err := New(client, true).Connect(ctx, a, nil)
+	ss, err := New(client, true, testConfig(t)).Connect(ctx, a, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -387,7 +387,7 @@ func TestRemoteOAuthIsolationRevocationAndAnonymousHelp(t *testing.T) {
 	defer upstream.Close()
 	apiClient, _ := api.NewClient(upstream.URL, "", "")
 	apiClient.PublicBase = "https://myscoutee.example/api"
-	handler, err := PublicHandler(apiClient)
+	handler, err := PublicHandler(apiClient, testConfig(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -491,7 +491,7 @@ func TestCampaignCreationIsDiscoverableOnlyForWorkAndUsesItsConnection(t *testin
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			a, b := mcp.NewInMemoryTransports()
-			ss, err := New(client, true).Connect(ctx, a, nil)
+			ss, err := New(client, true, testConfig(t)).Connect(ctx, a, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

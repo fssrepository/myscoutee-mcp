@@ -58,7 +58,7 @@ func TestEventsUseMCP2DiscoveryAndKeepOAuthUsersIsolated(t *testing.T) {
 	defer upstream.Close()
 	client, _ := api.NewClient(upstream.URL, "", "")
 	client.PublicBase = "https://app.example/api"
-	handler, err := PublicHandler(client)
+	handler, err := PublicHandler(client, testConfig(t))
 	if err != nil {
 		t.Fatal(err)
 	}
