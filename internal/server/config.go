@@ -38,6 +38,9 @@ func LoadConfig(directory string) (Config, error) {
 	if config.Name == "" || config.Title == "" || config.Version == "" || config.Instructions == "" || config.AuthorizationScope == "" {
 		return config, fmt.Errorf("product.json requires name, title, version, instructions and authorizationScope")
 	}
+	if strings.ContainsAny(config.AuthorizationScope, "\r\n\"\\") {
+		return config, fmt.Errorf("product.json authorizationScope contains invalid header characters")
+	}
 	prefix, err := url.Parse(config.HelpResourcePrefix)
 	if err != nil || prefix.Scheme == "" || prefix.RawQuery != "" || prefix.Fragment != "" || !strings.HasSuffix(config.HelpResourcePrefix, "/") {
 		return config, fmt.Errorf("product.json requires an absolute helpResourcePrefix ending in /")

@@ -1,5 +1,8 @@
 .PHONY: test build image plugin plugin-sync plugin-check contract-check oauth-client
 GO ?= go
+IMAGE ?= myscoutee-mcp:dev
+MCP_CONFIG_DIR ?=
+OPENAPI ?=
 MYSCOUTEE_VERSION ?= $(shell python3 -c 'import json; print(json.load(open("plugins/myscoutee/plugin.json"))["version"])')
 export MYSCOUTEE_VERSION
 
@@ -8,7 +11,8 @@ test:
 build:
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags='-s -w' -o build/myscoutee-mcp ./cmd/myscoutee-mcp
 image:
-	docker build -t myscoutee-mcp:$(MYSCOUTEE_VERSION) .
+	test -n "$(MCP_CONFIG_DIR)" || { echo "Set MCP_CONFIG_DIR to the application config/mcp directory" >&2; exit 1; }
+	docker build --build-context "mcp-config=$(MCP_CONFIG_DIR)" -t "$(IMAGE)" .
 plugin:
 	python3 plugins/build.py --target $(or $(PLUGIN_TARGET),all) $(if $(MCP_URL),--url '$(MCP_URL)',)
 plugin-sync:
@@ -16,7 +20,7 @@ plugin-sync:
 plugin-check:
 	python3 plugins/build.py --check-archive '$(PLUGIN_ZIP)' $(if $(SUBMISSION),--submission,)
 contract-check:
-	python3 tools/sync-api-contract.py --check
+	python3 tools/sync-api-contract.py --check --source "$(OPENAPI)" --contract "$(MCP_CONFIG_DIR)/contract.json"
 
 # Optional test client, deliberately separate from the production Go server.
 oauth-client:

@@ -1,7 +1,10 @@
 # Shared MCP service configuration; select compose.dev.yaml or compose.prod.yaml.
 services:
   mcp:
-    build: .
+    build:
+      context: .
+      additional_contexts:
+        mcp-config: ${MCP_CONFIG_DIR:?Set MCP_CONFIG_DIR to the application config/mcp directory}
     environment:
       MYSCOUTEE_MCP_TRANSPORT: http
       MYSCOUTEE_MCP_LISTEN: 0.0.0.0:8080

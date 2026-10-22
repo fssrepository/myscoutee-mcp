@@ -138,7 +138,7 @@ func TestMissingRevisionAndHTTPErrorDoNotFallback(t *testing.T) {
 		})
 	}
 }
-func TestPrivateToolsValidateCanonicalSchemasBeforeSending(t *testing.T) {
+func TestPrivateToolsValidateConfiguredSchemasBeforeSending(t *testing.T) {
 	var calls atomic.Int32
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/integrations/v1/connect" {

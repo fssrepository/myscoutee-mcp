@@ -20,17 +20,16 @@ type Parameter struct {
 	In   string `json:"in"`
 }
 type Operation struct {
-	Name        string         `json:"name"`
-	Method      string         `json:"method"`
-	Path        string         `json:"path"`
-	Description string         `json:"description"`
-	Schema      map[string]any `json:"schema"`
-	Parameters  []Parameter    `json:"parameters"`
-	Guidance string `json:"guidance,omitempty"`
-	DestructiveHint *bool `json:"destructiveHint,omitempty"`
-	AuthorizedGroupArgument string `json:"authorizedGroupArgument,omitempty"`
+	Name                    string         `json:"name"`
+	Method                  string         `json:"method"`
+	Path                    string         `json:"path"`
+	Description             string         `json:"description"`
+	Schema                  map[string]any `json:"schema"`
+	Parameters              []Parameter    `json:"parameters"`
+	Guidance                string         `json:"guidance,omitempty"`
+	DestructiveHint         *bool          `json:"destructiveHint,omitempty"`
+	AuthorizedGroupArgument string         `json:"authorizedGroupArgument,omitempty"`
 }
-
 
 type Client struct {
 	Base       string

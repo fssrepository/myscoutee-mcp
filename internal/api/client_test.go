@@ -68,5 +68,5 @@ func TestRejectUnsafeBaseURLsAndPartialCredentials(t *testing.T) {
 }
 
 func testOperation() Operation {
- return Operation{Name: "item", Method: "GET", Path: "/integrations/v1/events/{externalId}", Parameters: []Parameter{{Name: "externalId", In: "path"}}}
+	return Operation{Name: "item", Method: "GET", Path: "/events/{externalId}", Parameters: []Parameter{{Name: "externalId", In: "path"}}}
 }

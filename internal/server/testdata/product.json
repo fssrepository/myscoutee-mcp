@@ -1,0 +1,8 @@
+{
+  "name": "test-app",
+  "title": "Test application",
+  "version": "1",
+  "helpResourcePrefix": "test://help/",
+  "instructions": "Anonymous help is available without login or an API key. Test application instructions.",
+  "authorizationScope": "test:api"
+}
