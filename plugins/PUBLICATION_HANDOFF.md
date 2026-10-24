@@ -2,7 +2,7 @@
 
 Updated 2026-10-17, MSC-119. **Submission preparation; not submitted or published.**
 Read this first when resuming publication. Plugin/application release: **1.4.1**.
-The MCP binary's independent component version remains **1.6.0**.
+The current shared MCP release is **1.5.0**; its image and source are in the repository README.
 Task: https://github.com/fssrepository/myscoutee-roadmap/issues/157.
 
 ## 2026-10-17 plugin version aligned with the application release

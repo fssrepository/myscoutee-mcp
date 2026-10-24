@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: mcp
-    image: ${MCP_IMAGE:-myscoutee-mcp:1.6.0-prod}
+    image: ${MCP_IMAGE:-ghcr.io/fssrepository/myscoutee-mcp:1.5.0}
     restart: unless-stopped
     environment:
       MYSCOUTEE_API_BASE_URL: ${MYSCOUTEE_API_BASE_URL:?Set the prod API base URL ending in /api}

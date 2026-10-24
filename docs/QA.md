@@ -74,7 +74,7 @@ Automated OAuth/unit/transport checks do not mark these live client cases PASS.
 ## MCP Events — NOT RUN
 
 MSC-116's stable execution checklist is in the backend repository at
-`guides/qa/checklists/api/MCP-EVENTS-001.md`. It covers MCP 2.0 discovery, shared DCR
+`tests/qa/categories/API test/integration-access.md`. It covers MCP 2.0 discovery, shared DCR
 registration with independent user grants, signed challenge/rotation, restart and
 expiry, resource authorization/revocation, SSRF/DNS rebinding, bounded retries,
 virtual-thread concurrency, callback rate throttling, queue overflow and ChatGPT

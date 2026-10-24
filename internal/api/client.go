@@ -5,7 +5,6 @@ package api
 import (
 	"bytes"
 	"context"
-	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,28 +15,20 @@ import (
 	"time"
 )
 
-//go:embed contract.json
-var contract []byte
-
 type Parameter struct {
 	Name string `json:"name"`
 	In   string `json:"in"`
 }
 type Operation struct {
-	Name        string         `json:"name"`
-	Method      string         `json:"method"`
-	Path        string         `json:"path"`
-	Description string         `json:"description"`
-	Schema      map[string]any `json:"schema"`
-	Parameters  []Parameter    `json:"parameters"`
-}
-
-func Operations() []Operation {
-	var result []Operation
-	if err := json.Unmarshal(contract, &result); err != nil {
-		panic("invalid built-in API contract")
-	}
-	return result
+	Name                    string         `json:"name"`
+	Method                  string         `json:"method"`
+	Path                    string         `json:"path"`
+	Description             string         `json:"description"`
+	Schema                  map[string]any `json:"schema"`
+	Parameters              []Parameter    `json:"parameters"`
+	Guidance                string         `json:"guidance,omitempty"`
+	DestructiveHint         *bool          `json:"destructiveHint,omitempty"`
+	AuthorizedGroupArgument string         `json:"authorizedGroupArgument,omitempty"`
 }
 
 type Client struct {
@@ -51,7 +42,7 @@ type Client struct {
 type HTTPError struct{ Status int }
 
 func (e *HTTPError) Error() string {
-	return fmt.Sprintf("MyScoutee API returned HTTP %d; check access and retry only when appropriate", e.Status)
+	return fmt.Sprintf("Application API returned HTTP %d; check access and retry only when appropriate", e.Status)
 }
 
 type GroupScope struct {
@@ -188,7 +179,7 @@ func (c *Client) request(ctx context.Context, method, path string, body any, pri
 	}
 	res, err := c.HTTP.Do(req)
 	if err != nil {
-		return errors.New("MyScoutee API is unavailable")
+		return errors.New("Application API is unavailable")
 	}
 	defer res.Body.Close()
 	if res.StatusCode < 200 || res.StatusCode >= 300 {

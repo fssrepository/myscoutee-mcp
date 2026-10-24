@@ -8,8 +8,10 @@ COPY internal/ ./internal/
 RUN CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/myscoutee-mcp ./cmd/myscoutee-mcp
 
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/fssrepository/myscoutee-mcp"
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /out/myscoutee-mcp /myscoutee-mcp
+ENV MCP_CONFIG_DIR=/etc/mcp
 USER 65532:65532
 EXPOSE 8080
 ENTRYPOINT ["/myscoutee-mcp"]

@@ -3,53 +3,15 @@
 import argparse, json
 from pathlib import Path
 import yaml
-root=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser()
 parser.add_argument('--check',action='store_true')
+parser.add_argument('--source',type=Path,required=True,help='Application-owned OpenAPI YAML')
+parser.add_argument('--contract',type=Path,required=True,help='Application-owned selected MCP contract JSON')
 args=parser.parse_args()
-source=yaml.safe_load((root.parent/'myscoutee-client/openapi.yaml').read_text())
-allowed={
- 'adminOverview',
- 'operatorMeasurements',
- 'operatorRevenueReports',
- 'announcementAction',
- 'announcementDetails',
- 'assetDetails',
- 'campaignAction',
- 'campaignDetails',
- 'campaignHistory',
- 'caseAction',
- 'caseDetails',
- 'chatDetails',
- 'chatMessages',
- 'createAssets',
- 'createCampaigns',
- 'createEvents',
- 'encounters',
- 'event',
- 'eventDetails',
- 'groupDetails',
- 'inviteGroupParticipants',
- 'inviteParticipants',
- 'listAnnouncements',
- 'listAssets',
- 'listCampaigns',
- 'listCases',
- 'listChats',
- 'listEvents',
- 'listGroups',
- 'listNotifications',
- 'listRatings',
- 'listScheduledTasks',
- 'listServices',
- 'saveAnnouncement',
- 'saveCase',
- 'saveScheduledTask',
- 'scheduledTaskAction',
- 'serviceAction',
- 'serviceDetails',
- 'updateCampaign',
-}
+source=yaml.safe_load(args.source.read_text())
+selected=json.loads(args.contract.read_text())
+allowed={op['name'] for op in selected}
+metadata={op['name']:{key:value for key,value in op.items() if key not in {'name','method','path','description','schema','parameters'}} for op in selected}
 def resolve(value):
  if isinstance(value,list): return [resolve(x) for x in value]
  if not isinstance(value,dict): return value
@@ -75,11 +37,11 @@ for path,methods in source['paths'].items():
   if body:
    schema['properties']['request']=resolve(body)
    schema['required'].append('request')
-  operations.append({'name':op['operationId'],'method':method.upper(),'path':path,'description':op['summary'],'schema':schema,'parameters':params})
+  operations.append({'name':op['operationId'],'method':method.upper(),'path':path,'description':op['summary'],'schema':schema,'parameters':params,**metadata[op['operationId']]})
 assert {op['name'] for op in operations}==allowed
-out=root/'internal/api/contract.json'
+out=args.contract
 content=json.dumps(operations,indent=2,ensure_ascii=False)+'\n'
 if args.check:
- assert out.read_text()==content,'Run tools/sync-api-contract.py'
+ assert out.read_text()==content,'Regenerate the selected contract with tools/sync-api-contract.py'
 else: out.write_text(content)
-print(f'PASS: {len(operations)} MCP API schemas match myscoutee-client/openapi.yaml')
+print(f'PASS: {len(operations)} MCP API schemas match the selected OpenAPI source')

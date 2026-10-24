@@ -26,12 +26,7 @@ func TestClientKeepsIdentityAndAPIPathAndNeverAddsGroupHeaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var op Operation
-	for _, item := range Operations() {
-		if item.Name == "event" {
-			op = item
-		}
-	}
+	op := testOperation()
 	if _, err = c.Call(context.Background(), op, map[string]any{"externalId": "test-event"}); err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +43,7 @@ func TestRedirectsAndErrorsDoNotExposeCredentials(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, target.URL, 302) }))
 	defer upstream.Close()
 	c, _ := NewClient(upstream.URL, "secret", "client")
-	_, err := c.Call(context.Background(), Operations()[0], map[string]any{"externalId": "event"})
+	_, err := c.Call(context.Background(), testOperation(), map[string]any{"externalId": "event"})
 	if err == nil || hit || strings.Contains(err.Error(), "secret") {
 		t.Fatal("unsafe redirect/error")
 	}
@@ -70,4 +65,8 @@ func TestRejectUnsafeBaseURLsAndPartialCredentials(t *testing.T) {
 	if _, err := NewClient("https://example.com/api", "token", ""); err == nil {
 		t.Fatal("partial identity accepted")
 	}
+}
+
+func testOperation() Operation {
+	return Operation{Name: "item", Method: "GET", Path: "/events/{externalId}", Parameters: []Parameter{{Name: "externalId", In: "path"}}}
 }

@@ -26,6 +26,10 @@ func main() {
 		}
 		return
 	}
+	config, err := server.LoadConfig(os.Getenv("MCP_CONFIG_DIR"))
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	client, err := api.NewClient(os.Getenv("MYSCOUTEE_API_BASE_URL"), os.Getenv("MYSCOUTEE_API_TOKEN"), os.Getenv("MYSCOUTEE_CLIENT_ID"))
@@ -41,11 +45,11 @@ func main() {
 	}
 	switch os.Getenv("MYSCOUTEE_MCP_TRANSPORT") {
 	case "", "stdio":
-		if err = server.New(client, client.Token != "").Run(ctx, &mcp.StdioTransport{}); err != nil && ctx.Err() == nil {
+		if err = server.New(client, client.Token != "", config).Run(ctx, &mcp.StdioTransport{}); err != nil && ctx.Err() == nil {
 			log.Fatal("MCP transport failed")
 		}
 	case "http":
-		handler, err := server.PublicHandler(client)
+		handler, err := server.PublicHandler(client, config)
 		if err != nil {
 			log.Fatal(err)
 		}

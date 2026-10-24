@@ -1,0 +1,202 @@
+[
+  {
+    "name": "event",
+    "method": "GET",
+    "path": "/events/{externalId}",
+    "description": "Configured test operation",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "externalId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "externalId"
+      ],
+      "additionalProperties": false
+    },
+    "parameters": [
+      {
+        "name": "externalId",
+        "in": "path"
+      }
+    ]
+  },
+  {
+    "name": "encounters",
+    "method": "GET",
+    "path": "/encounters",
+    "description": "Configured test operation",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "parameters": []
+  },
+  {
+    "name": "createAssets",
+    "method": "POST",
+    "path": "/createAssets",
+    "description": "Configured test operation",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "items"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "additionalProperties": false
+    },
+    "parameters": [],
+    "destructiveHint": false,
+    "guidance": "Requires a base-profile key"
+  },
+  {
+    "name": "createEvents",
+    "method": "POST",
+    "path": "/createEvents",
+    "description": "Configured test operation",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "items"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "additionalProperties": false
+    },
+    "parameters": [],
+    "destructiveHint": false,
+    "guidance": "For a different group use a connection with that group's profile key"
+  },
+  {
+    "name": "inviteParticipants",
+    "method": "GET",
+    "path": "/inviteParticipants",
+    "description": "Configured test operation",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "parameters": []
+  },
+  {
+    "name": "inviteGroupParticipants",
+    "method": "POST",
+    "path": "/inviteGroupParticipants",
+    "description": "Configured test operation",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "groupId": {
+          "type": "string"
+        },
+        "request": {
+          "type": "object",
+          "properties": {
+            "participantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "participantIds"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "groupId",
+        "request"
+      ],
+      "additionalProperties": false
+    },
+    "parameters": [],
+    "authorizedGroupArgument": "groupId"
+  },
+  {
+    "name": "listRatings",
+    "method": "GET",
+    "path": "/listRatings",
+    "description": "Configured test operation",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "parameters": []
+  },
+  {
+    "name": "createCampaigns",
+    "method": "POST",
+    "path": "/campaigns",
+    "description": "Configured test operation",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "items"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "additionalProperties": false
+    },
+    "parameters": [],
+    "destructiveHint": false
+  }
+]
